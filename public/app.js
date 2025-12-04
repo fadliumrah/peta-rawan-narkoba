@@ -44,9 +44,27 @@
 
   // load banner
   fetch('/api/banner').then(r=>r.json()).then(b=>{
-    if (b && b.url) document.getElementById('bannerImg').src = b.url;
-    if (b && b.caption) document.getElementById('bannerCaption').textContent = b.caption;
-  }).catch(()=>{});
+    const bannerImg = document.getElementById('bannerImg');
+    const bannerCaption = document.getElementById('bannerCaption');
+    
+    // Always set caption
+    if (b && b.caption) {
+      bannerCaption.textContent = b.caption;
+    }
+    
+    // Set banner image if exists, otherwise hide it
+    if (b && b.url) {
+      bannerImg.src = b.url;
+      bannerImg.style.display = 'block';
+    } else {
+      bannerImg.style.display = 'none';
+    }
+  }).catch(err => {
+    console.error('Failed to load banner:', err);
+    // Show default caption even if API fails
+    const caption = document.getElementById('bannerCaption');
+    if (caption) caption.textContent = 'Informasi Area Rawan Narkoba - Kota Tanjungpinang';
+  });
 
   // Load kelurahan list (static) or fallback to geojson for geometry lookup
   let kelurahMap = {};

@@ -78,23 +78,37 @@ function loadPoints(){
 function savePoints(points){ fs.writeFileSync(POINTS_FILE, JSON.stringify(points, null, 2), 'utf8'); }
 
 // In-memory storage + persistent file storage for banner
-let bannerCache = null;
+let bannerCache = { 
+  dataUrl: null, 
+  caption: 'Informasi Area Rawan Narkoba - Kota Tanjungpinang'
+};
 
 function loadBannerMeta(){
-  if (bannerCache) return bannerCache;
+  // Return cached banner first if exists
+  if (bannerCache && bannerCache.dataUrl) return bannerCache;
+  
+  // Try to load from file
   try{ 
     const txt = fs.readFileSync(BANNER_META, 'utf8'); 
-    bannerCache = JSON.parse(txt);
-    return bannerCache;
+    const data = JSON.parse(txt);
+    if (data && (data.dataUrl || data.caption)) {
+      bannerCache = data;
+      return bannerCache;
+    }
   } catch(e) { 
-    bannerCache = { dataUrl: null, caption: 'Informasi area rawan narkoba - Tanjungpinang' };
-    return bannerCache;
+    // File doesn't exist or invalid JSON - use default
   }
+  
+  return bannerCache;
 }
 
 function saveBannerMeta(m){ 
   bannerCache = m;
-  fs.writeFileSync(BANNER_META, JSON.stringify(m,null,2), 'utf8');
+  try {
+    fs.writeFileSync(BANNER_META, JSON.stringify(m,null,2), 'utf8');
+  } catch(e) {
+    console.error('Failed to save banner meta:', e.message);
+  }
 }
 
 // API: get points
@@ -160,9 +174,10 @@ app.patch('/api/points/:id', basicAuth, (req, res) => {
 // API: banner get
 app.get('/api/banner', (req, res) => {
   const meta = loadBannerMeta();
-  // Return dataUrl directly (base64) instead of file path
-  let url = meta && meta.dataUrl ? meta.dataUrl : '/uploads/banner-default.svg';
-  res.json({ url, caption: meta ? meta.caption : '' });
+  res.json({ 
+    url: meta.dataUrl || null, 
+    caption: meta.caption || 'Informasi Area Rawan Narkoba - Kota Tanjungpinang'
+  });
 });
 
 // API: banner upload
