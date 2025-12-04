@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Peta Rawan Narkoba - Tanjungpinang</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-container">
+      <div class="nav-logo-section">
+        <img class="nav-logo" src="/logo-bnn.png" id="logoImg" alt="Logo BNN" />
+        <div class="nav-text">
+          <h1 class="nav-title">Peta Rawan Narkoba</h1>
+          <p class="nav-subtitle">BNN Kota Tanjungpinang</p>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <header class="banner-header">
+    <div class="banner-container">
+      <img id="bannerImg" class="banner-img" src="/uploads/banner-default.svg" alt="Banner" />
+      <div id="bannerCaption" class="caption">Loading informasi...</div>
+    </div>
+  </header>
+
+  <main>
+    <div id="map" style="height:600px; margin-top:30px;"></div>
+  </main>
+
+  <script>
+    // Force reload logo with cache-busting timestamp
+    document.getElementById('logoImg').src = '/logo-bnn.png?t=' + Date.now();
+  </script>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <p>&copy; 2025 Peta Rawan Narkoba - Tanjungpinang. Informasi untuk kepentingan publik.</p>
+      <p class="footer-contact">Hubungi: <a href="tel:+6281275405434">+62 812-7540-5434</a> | <a href="mailto:bnnkota_tanjungpinang@bnn.go.id">bnnkota_tanjungpinang@bnn.go.id</a></p>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

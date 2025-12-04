@@ -1,0 +1,23 @@
+[
+  { "name": "Dompak", "kecamatan": "Bukit Bestari", "color": "#1f78b4" },
+  { "name": "Sei Jang", "kecamatan": "Bukit Bestari", "color": "#33a02c" },
+  { "name": "Tanjung Ayun Sakti", "kecamatan": "Bukit Bestari", "color": "#e31a1c" },
+  { "name": "Tanjungpinang Timur", "kecamatan": "Bukit Bestari", "color": "#ff7f00" },
+  { "name": "Tanjung Unggat", "kecamatan": "Bukit Bestari", "color": "#6a3d9a" },
+
+  { "name": "Bukit Cermin", "kecamatan": "Tanjungpinang Barat", "color": "#b15928" },
+  { "name": "Kampung Baru", "kecamatan": "Tanjungpinang Barat", "color": "#a6cee3" },
+  { "name": "Kemboja", "kecamatan": "Tanjungpinang Barat", "color": "#b2df8a" },
+  { "name": "Tanjungpinang Barat", "kecamatan": "Tanjungpinang Barat", "color": "#fb9a99" },
+
+  { "name": "Kampung Bugis", "kecamatan": "Tanjungpinang Kota", "color": "#fdbf6f" },
+  { "name": "Penyengat", "kecamatan": "Tanjungpinang Kota", "color": "#cab2d6" },
+  { "name": "Senggarang", "kecamatan": "Tanjungpinang Kota", "color": "#ffff99" },
+  { "name": "Tanjungpinang Kota", "kecamatan": "Tanjungpinang Kota", "color": "#8dd3c7" },
+
+  { "name": "Air Raja", "kecamatan": "Tanjungpinang Timur", "color": "#e41a1c" },
+  { "name": "Batu IX", "kecamatan": "Tanjungpinang Timur", "color": "#377eb8" },
+  { "name": "Kampung Bulang", "kecamatan": "Tanjungpinang Timur", "color": "#4daf4a" },
+  { "name": "Melayu Kota Piring", "kecamatan": "Tanjungpinang Timur", "color": "#984ea3" },
+  { "name": "Pinang Kencana", "kecamatan": "Tanjungpinang Timur", "color": "#ff7f00" }
+]

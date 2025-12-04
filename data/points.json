@@ -1,0 +1,42 @@
+[
+  {
+    "id": 2,
+    "lat": 0.873837,
+    "lng": 104.458237,
+    "note": "",
+    "kelurahan": "Dompak",
+    "created_at": "2025-12-04T12:12:39.854Z"
+  },
+  {
+    "id": 3,
+    "lat": 0.942378,
+    "lng": 104.447651,
+    "note": "",
+    "kelurahan": "Kampung Bugis",
+    "created_at": "2025-12-04T12:13:28.931Z"
+  },
+  {
+    "id": 4,
+    "lat": 0.907479,
+    "lng": 104.484043,
+    "note": "",
+    "kelurahan": "Bukit Cermin",
+    "created_at": "2025-12-04T12:29:53.623Z"
+  },
+  {
+    "id": 5,
+    "lat": 0.955867,
+    "lng": 104.468016,
+    "note": "",
+    "kelurahan": "Kampung Bugis",
+    "created_at": "2025-12-04T14:06:46.414Z"
+  },
+  {
+    "id": 6,
+    "lat": 0.954757,
+    "lng": 104.465696,
+    "note": "",
+    "kelurahan": "Kampung Bugis",
+    "created_at": "2025-12-04T14:07:30.245Z"
+  }
+]

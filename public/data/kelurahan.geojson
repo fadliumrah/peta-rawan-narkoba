@@ -1,0 +1,90 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 1,
+        "name": "Kampung Bugis",
+        "color": "#FF0000",
+        "kecamatan": "Tanjungpinang Kota"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [0.882960, 104.443828],
+            [0.883500, 104.450000],
+            [0.890000, 104.450500],
+            [0.890500, 104.444000],
+            [0.882960, 104.443828]
+            
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 2,
+        "name": "Tanjung Pinang Timur",
+        "color": "#4ECDC4",
+        "kecamatan": "Tanjungpinang Timur"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [104.7350, 0.8800],
+            [104.7700, 0.8800],
+            [104.7750, 0.9350],
+            [104.7350, 0.9300],
+            [104.7350, 0.8800]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 3,
+        "name": "Tanjung Pinang Pusat",
+        "color": "#FFD93D",
+        "kecamatan": "Tanjungpinang Pusat"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [104.7200, 0.9350],
+            [104.7550, 0.9350],
+            [104.7550, 0.9800],
+            [104.7200, 0.9800],
+            [104.7200, 0.9350]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 4,
+        "name": "Tanjung Pinang Utara",
+        "color": "#6BCB77",
+        "kecamatan": "Tanjungpinang Utara"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [104.7000, 0.8400],
+            [104.7700, 0.8400],
+            [104.7700, 0.8800],
+            [104.7000, 0.8800],
+            [104.7000, 0.8400]
+          ]
+        ]
+      }
+    }
+  ]
+}
