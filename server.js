@@ -38,22 +38,28 @@ function basicAuth(req, res, next) {
   return res.status(401).send('Authentication required');
 }
 
+// Route /admin to /admin.html (clean URL) - BEFORE static files
+app.get('/admin', basicAuth, (req, res) => {
+  const adminPath = path.join(PUBLIC_DIR, 'admin.html');
+  try {
+    const content = fs.readFileSync(adminPath, 'utf8');
+    res.type('html').send(content);
+  } catch (e) {
+    res.status(404).send('Admin page not found. Path: ' + adminPath);
+  }
+});
+
 // Protect admin static assets (admin.html, admin.js, etc.) using Basic Auth
 app.use((req, res, next) => {
   const p = req.path || '';
   // apply protection to any path that begins with '/admin'
-  if (p === '/admin.html' || p === '/admin' || p.startsWith('/admin/')) {
+  if (p === '/admin.html' || p.startsWith('/admin/')) {
     return basicAuth(req, res, next);
   }
   return next();
 });
 
-// Route /admin to /admin.html (clean URL)
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, 'admin.html'));
-});
-
-// Serve public static files (other assets remain public)
+// Serve public static files
 app.use(express.static(PUBLIC_DIR));
 
 
