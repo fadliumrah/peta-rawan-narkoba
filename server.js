@@ -213,4 +213,10 @@ app.get('/api/config', (req, res) => {
 });
 // (kelurahan upload endpoint removed)
 
-app.listen(PORT, () => console.log(`Server started on http://localhost:${PORT}`));
+// Export for Vercel serverless
+module.exports = app;
+
+// Only listen if not in Vercel environment
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => console.log(`Server started on http://localhost:${PORT}`));
+}
