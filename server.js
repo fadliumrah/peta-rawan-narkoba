@@ -78,10 +78,34 @@ function loadPoints(){
 }
 function savePoints(points){ fs.writeFileSync(POINTS_FILE, JSON.stringify(points, null, 2), 'utf8'); }
 
+// In-memory storage for banner (since Vercel doesn't support file writes)
+let bannerData = { 
+  dataUrl: null, 
+  caption: 'Informasi area rawan narkoba - Tanjungpinang' 
+};
+
 function loadBannerMeta(){
-  try{ const txt = fs.readFileSync(BANNER_META, 'utf8'); return JSON.parse(txt); }catch(e){ return { filename: null, caption: 'Informasi area rawan narkoba - Tanjungpinang' }; }
+  // Try to load from file first (for local development)
+  try{ 
+    const txt = fs.readFileSync(BANNER_META, 'utf8'); 
+    const data = JSON.parse(txt);
+    // Merge with in-memory data
+    if (data.filename) bannerData = data;
+    return bannerData;
+  } catch(e) { 
+    return bannerData; 
+  }
 }
-function saveBannerMeta(m){ fs.writeFileSync(BANNER_META, JSON.stringify(m,null,2), 'utf8'); }
+
+function saveBannerMeta(m){ 
+  bannerData = m;
+  // Try to save to file (works in local, ignored in Vercel)
+  try {
+    fs.writeFileSync(BANNER_META, JSON.stringify(m,null,2), 'utf8');
+  } catch(e) {
+    // Ignore write errors in serverless environment
+  }
+}
 
 // API: get points
 app.get('/api/points', (req, res) => {
@@ -146,7 +170,8 @@ app.patch('/api/points/:id', basicAuth, (req, res) => {
 // API: banner get
 app.get('/api/banner', (req, res) => {
   const meta = loadBannerMeta();
-  let url = meta && meta.filename ? '/' + meta.filename.replace(/\\\\/g, '/') : '/uploads/banner-default.svg';
+  // Return dataUrl directly (base64) instead of file path
+  let url = meta && meta.dataUrl ? meta.dataUrl : '/uploads/banner-default.svg';
   res.json({ url, caption: meta ? meta.caption : '' });
 });
 
@@ -154,18 +179,13 @@ app.get('/api/banner', (req, res) => {
 // Banner upload via JSON { filename, data: base64..., caption }
 app.post('/api/banner', basicAuth, (req, res) => {
   const caption = req.body.caption || '';
-  const filename = req.body.filename || 'banner.png';
-  const data = req.body.data; // base64 string possibly with data:... prefix
+  const data = req.body.data; // base64 string with data:... prefix
   if (!data) return res.status(400).json({ error: 'data (base64) required' });
-  // strip prefix
-  const m = data.match(/^data:.*;base64,(.*)$/);
-  const b64 = m ? m[1] : data;
-  const buffer = Buffer.from(b64, 'base64');
-  const outName = 'banner' + path.extname(filename);
-  const outPath = path.join(UPLOADS_DIR, outName);
-  fs.writeFileSync(outPath, buffer);
-  saveBannerMeta({ filename: path.join('uploads', outName), caption });
-  res.json({ ok: true, filename: outName, caption });
+  
+  // Store the complete data URL (includes data:image/png;base64,...)
+  // This works in serverless because we're not writing to filesystem
+  saveBannerMeta({ dataUrl: data, caption });
+  res.json({ ok: true, caption });
 });
 
 // API: logo upload
