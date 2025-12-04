@@ -40,47 +40,64 @@
   const legend = L.control({ position: 'bottomright' });
   let legendDiv;
   let legendContent;
+  let isExpanded = false;
+  
   legend.onAdd = function() {
-    const div = L.DomUtil.create('div', 'legend');
+    const div = L.DomUtil.create('div', 'legend legend-mobile');
     
-    // Add collapsible header for mobile
+    // Add collapsible header - show/hide on tap
     const header = document.createElement('div');
+    header.className = 'legend-header';
     header.style.cursor = 'pointer';
     header.style.userSelect = 'none';
-    header.innerHTML = '<h4 style="margin:0 0 10px 0; font-size:0.95rem; font-weight:700;">📍 Tingkat Kerawanan</h4>';
+    header.style.padding = '8px 10px';
+    header.style.borderBottom = '1px solid #eee';
+    header.innerHTML = '<span style="font-size:0.9rem; font-weight:700;">📍 Tingkat Kerawanan</span><span id="legend-toggle" style="float:right; font-size:0.8rem; color:#666;">▼</span>';
     div.appendChild(header);
     
     // Content container (collapsible)
     legendContent = document.createElement('div');
     legendContent.className = 'legend-content';
+    legendContent.style.padding = '8px 10px';
     
     Object.keys(categoryMap).forEach(cat => {
       const info = categoryMap[cat];
       const row = document.createElement('div');
-      row.style.margin = '6px 0';
-      row.innerHTML = `<span style="display:inline-block; width:14px; height:14px; background:${info.color}; border-radius:50%; margin-right:8px; vertical-align:middle;"></span><small style="vertical-align:middle;">${info.emoji} ${info.label}</small><span data-category="${cat}" style="float:right; background:#eee; padding:2px 6px; border-radius:12px; font-size:0.8rem; margin-left:8px;">0</span>`;
+      row.style.margin = '5px 0';
+      row.style.fontSize = '0.85rem';
+      row.innerHTML = `<span style="display:inline-block; width:12px; height:12px; background:${info.color}; border-radius:50%; margin-right:6px; vertical-align:middle;"></span><span style="vertical-align:middle;">${info.emoji} ${info.label}</span><span data-category="${cat}" style="float:right; background:#f0f0f0; padding:1px 5px; border-radius:10px; font-size:0.75rem; margin-left:6px; min-width:18px; text-align:center;">0</span>`;
       legendContent.appendChild(row);
     });
     
     div.appendChild(legendContent);
     
-    // Toggle on mobile when tapping header
+    // Toggle functionality
+    const toggleIcon = () => {
+      const icon = document.getElementById('legend-toggle');
+      if (icon) icon.textContent = isExpanded ? '▲' : '▼';
+    };
+    
     header.addEventListener('click', function() {
-      if (window.innerWidth <= 600) {
-        const isHidden = legendContent.style.display === 'none';
-        legendContent.style.display = isHidden ? 'block' : 'none';
-      }
+      isExpanded = !isExpanded;
+      legendContent.style.display = isExpanded ? 'block' : 'none';
+      toggleIcon();
     });
     
-    // Auto-collapse on mobile, expanded on desktop
-    if (window.innerWidth <= 600) {
+    // Auto-collapse on mobile by default
+    if (window.innerWidth <= 768) {
       legendContent.style.display = 'none';
+      isExpanded = false;
+    } else {
+      legendContent.style.display = 'block';
+      isExpanded = true;
     }
+    toggleIcon();
     
     div.style.background = 'white';
-    div.style.padding = '10px';
-    div.style.borderRadius = '6px';
-    div.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+    div.style.borderRadius = '8px';
+    div.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+    div.style.maxWidth = '220px';
+    div.style.fontSize = '0.85rem';
     legendDiv = div;
     return div;
   };
