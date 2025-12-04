@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-// avoid native modules to keep installs simple
+const db = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -56,141 +56,110 @@ app.get('/admin', (req, res) => {
 });
 
 
-// simple JSON-file storage instead of sqlite for portability
+// Database storage (SQLite)
 const DATA_DIR = path.join(__dirname, 'data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-const POINTS_FILE = path.join(DATA_DIR, 'points.json');
-const BANNER_META = path.join(DATA_DIR, 'banner.json');
-
-// helper: load kelurahan list (names) from public/data/kelurahan_list.json if available
-function loadKelurahanNames(){
-  try{
-    const p = path.join(PUBLIC_DIR, 'data', 'kelurahan_list.json');
-    const txt = fs.readFileSync(p, 'utf8');
-    const arr = JSON.parse(txt);
-    return (arr||[]).map(k => String(k.name || k.kelurahan || k.kecamatan || '').trim().toLowerCase()).filter(Boolean);
-  }catch(e){ return []; }
-}
-
-function loadPoints(){
-  try{ const txt = fs.readFileSync(POINTS_FILE, 'utf8'); return JSON.parse(txt); }catch(e){ return []; }
-}
-function savePoints(points){ fs.writeFileSync(POINTS_FILE, JSON.stringify(points, null, 2), 'utf8'); }
-
-// In-memory storage + persistent file storage for banner
-let bannerCache = { 
-  dataUrl: null, 
-  caption: 'Informasi Area Rawan Narkoba - Kota Tanjungpinang'
-};
-
-function loadBannerMeta(){
-  // Return cached banner first if exists
-  if (bannerCache && bannerCache.dataUrl) return bannerCache;
-  
-  // Try to load from file
-  try{ 
-    const txt = fs.readFileSync(BANNER_META, 'utf8'); 
-    const data = JSON.parse(txt);
-    if (data && (data.dataUrl || data.caption)) {
-      bannerCache = data;
-      return bannerCache;
-    }
-  } catch(e) { 
-    // File doesn't exist or invalid JSON - use default
-  }
-  
-  return bannerCache;
-}
-
-function saveBannerMeta(m){ 
-  bannerCache = m;
-  try {
-    fs.writeFileSync(BANNER_META, JSON.stringify(m,null,2), 'utf8');
-  } catch(e) {
-    console.error('Failed to save banner meta:', e.message);
-  }
-}
 
 // API: get points
 app.get('/api/points', (req, res) => {
-  const rows = loadPoints();
-  // return in reverse chronological order
-  rows.sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
-  res.json(rows);
+  try {
+    const points = db.getAllPoints();
+    res.json(points);
+  } catch (err) {
+    console.error('Error fetching points:', err);
+    res.status(500).json({ error: 'Failed to fetch points' });
+  }
 });
 
 // API: add point
 app.post('/api/points', basicAuth, (req, res) => {
-  const { lat, lng, note, kelurahan } = req.body;
-  if (typeof lat === 'undefined' || typeof lng === 'undefined') return res.status(400).json({ error: 'lat,lng required' });
-  // require kelurahan to be provided and valid
-  const kelNames = loadKelurahanNames();
-  if (!kelurahan || String(kelurahan).trim() === '') return res.status(400).json({ error: 'kelurahan required' });
-  const kname = String(kelurahan).trim().toLowerCase();
-  if (kelNames.length > 0 && !kelNames.includes(kname)) return res.status(400).json({ error: 'invalid kelurahan' });
-  const points = loadPoints();
-  const id = (points.length ? Math.max(...points.map(p=>p.id)) : 0) + 1;
-  const row = { id, lat: Number(lat), lng: Number(lng), note: note || '', kelurahan: kelurahan || null, created_at: new Date().toISOString() };
-  points.push(row);
-  savePoints(points);
-  res.json(row);
+  try {
+    const { name, lat, lng, category, description } = req.body;
+    if (typeof lat === 'undefined' || typeof lng === 'undefined') {
+      return res.status(400).json({ error: 'lat,lng required' });
+    }
+    if (!name || !category) {
+      return res.status(400).json({ error: 'name and category required' });
+    }
+    if (!['rendah', 'sedang', 'tinggi'].includes(category)) {
+      return res.status(400).json({ error: 'category must be rendah, sedang, or tinggi' });
+    }
+    
+    const id = db.createPoint(name, Number(lat), Number(lng), category, description || null);
+    const point = db.getPointById(id);
+    res.json(point);
+  } catch (err) {
+    console.error('Error adding point:', err);
+    res.status(500).json({ error: 'Failed to add point' });
+  }
 });
 
 // API: delete point
 app.delete('/api/points/:id', basicAuth, (req, res) => {
-  const id = Number(req.params.id);
-  let points = loadPoints();
-  const before = points.length;
-  points = points.filter(p=>p.id !== id);
-  savePoints(points);
-  res.json({ ok: true, removed: before - points.length });
+  try {
+    const id = Number(req.params.id);
+    const result = db.deletePoint(id);
+    res.json({ ok: true, removed: result.changes });
+  } catch (err) {
+    console.error('Error deleting point:', err);
+    res.status(500).json({ error: 'Failed to delete point' });
+  }
 });
 
-// API: update point (partial) - allow updating kelurahan or note
+// API: update point
 app.patch('/api/points/:id', basicAuth, (req, res) => {
-  const id = Number(req.params.id);
-  let points = loadPoints();
-  const idx = points.findIndex(p => p.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'not found' });
-  const allowed = ['kelurahan', 'note', 'lat', 'lng'];
-  // if kelurahan is being updated, validate it's non-empty and valid
-  if (Object.prototype.hasOwnProperty.call(req.body, 'kelurahan')) {
-    const v = req.body.kelurahan;
-    if (!v || String(v).trim() === '') return res.status(400).json({ error: 'kelurahan required' });
-    const kelNames = loadKelurahanNames();
-    const kname = String(v).trim().toLowerCase();
-    if (kelNames.length > 0 && !kelNames.includes(kname)) return res.status(400).json({ error: 'invalid kelurahan' });
-  }
-  Object.keys(req.body || {}).forEach(k => {
-    if (allowed.includes(k)) {
-      if (k === 'lat' || k === 'lng') points[idx][k] = Number(req.body[k]);
-      else points[idx][k] = req.body[k];
+  try {
+    const id = Number(req.params.id);
+    const point = db.getPointById(id);
+    if (!point) return res.status(404).json({ error: 'not found' });
+    
+    const { name, lat, lng, category, description } = req.body;
+    const updatedName = name !== undefined ? name : point.name;
+    const updatedLat = lat !== undefined ? Number(lat) : point.lat;
+    const updatedLng = lng !== undefined ? Number(lng) : point.lng;
+    const updatedCategory = category !== undefined ? category : point.category;
+    const updatedDescription = description !== undefined ? description : point.description;
+    
+    if (updatedCategory && !['rendah', 'sedang', 'tinggi'].includes(updatedCategory)) {
+      return res.status(400).json({ error: 'category must be rendah, sedang, or tinggi' });
     }
-  });
-  savePoints(points);
-  res.json(points[idx]);
+    
+    db.updatePoint(id, updatedName, updatedLat, updatedLng, updatedCategory, updatedDescription);
+    const updated = db.getPointById(id);
+    res.json(updated);
+  } catch (err) {
+    console.error('Error updating point:', err);
+    res.status(500).json({ error: 'Failed to update point' });
+  }
 });
 
 // API: banner get
 app.get('/api/banner', (req, res) => {
-  const meta = loadBannerMeta();
-  res.json({ 
-    url: meta.dataUrl || null, 
-    caption: meta.caption || 'Informasi Area Rawan Narkoba - Kota Tanjungpinang'
-  });
+  try {
+    const banner = db.getBanner();
+    res.json({ 
+      url: banner.image_data || null, 
+      caption: banner.caption || 'Informasi Area Rawan Narkoba - Kota Tanjungpinang'
+    });
+  } catch (err) {
+    console.error('Error fetching banner:', err);
+    res.status(500).json({ error: 'Failed to fetch banner' });
+  }
 });
 
 // API: banner upload
-// Banner upload via JSON { filename, data: base64..., caption }
 app.post('/api/banner', basicAuth, (req, res) => {
-  const caption = req.body.caption || '';
-  const data = req.body.data; // base64 string with data:... prefix
-  if (!data) return res.status(400).json({ error: 'data (base64) required' });
-  
-  // Store the complete data URL (includes data:image/png;base64,...)
-  // This works in serverless because we're not writing to filesystem
-  saveBannerMeta({ dataUrl: data, caption });
-  res.json({ ok: true, caption });
+  try {
+    const caption = req.body.caption || 'Informasi Area Rawan Narkoba - Kota Tanjungpinang';
+    const data = req.body.data; // base64 string with data:... prefix
+    if (!data) return res.status(400).json({ error: 'data (base64) required' });
+    
+    db.updateBanner(data, caption);
+    res.json({ ok: true, caption });
+  } catch (err) {
+    console.error('Error uploading banner:', err);
+    res.status(500).json({ error: 'Failed to upload banner' });
+  }
 });
 
 // API: logo upload

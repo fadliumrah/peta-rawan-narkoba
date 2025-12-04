@@ -89,14 +89,21 @@
             </div>
           </div>
           <div class="form-field">
-            <label>Catatan:</label>
-            <input type="text" name="note" placeholder="Deskripsi singkat lokasi..." />
+            <label>Nama Lokasi:</label>
+            <input type="text" name="name" placeholder="Nama lokasi, contoh: Kelurahan Tanjung Pinang Timur" required />
           </div>
           <div class="form-field">
-            <label>Kelurahan (wajib):</label>
-            <select name="kelurahan" id="kelurahanSelect" required>
-              <option value="">-- Pilih kelurahan --</option>
+            <label>Kategori Rawan:</label>
+            <select name="category" required>
+              <option value="">-- Pilih kategori --</option>
+              <option value="rendah">🟢 Rendah</option>
+              <option value="sedang">🟡 Sedang</option>
+              <option value="tinggi">🔴 Tinggi</option>
             </select>
+          </div>
+          <div class="form-field">
+            <label>Deskripsi:</label>
+            <textarea name="description" placeholder="Deskripsi detail tentang lokasi ini..." rows="3"></textarea>
           </div>
           <button type="submit" class="btn btn-danger">➕ Tambah Titik</button>
         </form>

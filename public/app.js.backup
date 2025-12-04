@@ -1,0 +1,244 @@
+// User map: load banner, draw points colored by risk category (rendah/sedang/tinggi)
+(function(){
+  const map = L.map('map').setView([0.9167, 104.4510], 12);
+
+  // Load basemap with CartoDB Voyager (rich colors with natural green vegetation)
+  function loadBaseMap(){
+    // Use CartoDB Voyager for vibrant, detailed map with natural colors
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors &amp; CARTO',
+      subdomains: 'abcd'
+    }).addTo(map);
+    
+    // Try to load Google Maps if API key is available for enhanced interactivity
+    fetch('/api/config').then(r=>r.json()).then(cfg => {
+      const key = cfg && cfg.GOOGLE_MAPS_API_KEY;
+      if (key) {
+        window._initGoogleMaps = function(){
+          const s = document.createElement('script');
+          s.src = 'https://unpkg.com/leaflet.gridlayer.googlemutant/Leaflet.GoogleMutant.js';
+          s.onload = function(){
+            try{
+              // Optional: add Google Maps as an alternative layer (not shown by default)
+              const gm = L.gridLayer.googleMutant({ type: 'roadmap' });
+              // Don't add to map automatically; just keep as option
+            }catch(e){}
+          };
+          document.head.appendChild(s);
+        };
+        const g = document.createElement('script');
+        g.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&callback=_initGoogleMaps`;
+        g.async = true;
+        g.defer = true;
+        document.head.appendChild(g);
+      }
+    }).catch(()=>{});
+  }
+  loadBaseMap();
+  // attempt to load and draw kelurahan boundaries (outline only) if geojson exists
+  function loadKelurahanBoundaries(){
+    // Boundary loading removed per user request
+  }
+  // Boundary features removed per user request
+
+  // load banner
+  fetch('/api/banner').then(r=>r.json()).then(b=>{
+    const bannerImg = document.getElementById('bannerImg');
+    const bannerCaption = document.getElementById('bannerCaption');
+    
+    // Always set caption
+    if (b && b.caption) {
+      bannerCaption.textContent = b.caption;
+    }
+    
+    // Set banner image if exists, otherwise hide it
+    if (b && b.url) {
+      bannerImg.src = b.url;
+      bannerImg.style.display = 'block';
+    } else {
+      bannerImg.style.display = 'none';
+    }
+  }).catch(err => {
+    console.error('Failed to load banner:', err);
+    // Show default caption even if API fails
+    const caption = document.getElementById('bannerCaption');
+    if (caption) caption.textContent = 'Informasi Area Rawan Narkoba - Kota Tanjungpinang';
+  });
+
+  // Load kelurahan list (static) or fallback to geojson for geometry lookup
+  let kelurahMap = {};
+  let kelurahList = [];
+
+  function buildLegendFromList(list){
+    kelurahList = list.map((k, idx) => ({ id: k.id || idx, name: k.name || k.kelurahan || k.kecamatan || ('area-' + idx), color: k.color || '#FF6B6B', geometry: k.geometry }));
+    // build name->color lookup for faster, normalized matching
+    kelurahMap = {};
+    kelurahList.forEach(k => {
+      const key = String(k.name || '').trim().toLowerCase();
+      kelurahMap[key] = k.color;
+    });
+    // Add legend (shows available kelurahan names and colors) and setup count placeholders
+    const legend = L.control({ position: 'bottomright' });
+    let legendDiv;
+    legend.onAdd = function() {
+      const div = L.DomUtil.create('div', 'legend');
+      div.innerHTML = '<h4 style="margin:0 0 10px 0; font-size:0.95rem; font-weight:700;">📍 Legenda Kelurahan</h4>';
+      kelurahList.forEach(k => {
+        const key = String(k.name||'').trim().toLowerCase();
+        const row = document.createElement('div');
+        row.style.margin = '6px 0';
+        row.innerHTML = `<span style="display:inline-block; width:14px; height:14px; background:${k.color}; border-radius:3px; margin-right:8px; vertical-align:middle;"></span><small style="vertical-align:middle;">${k.name}</small><span data-kel="${key}" style="float:right; background:#eee; padding:2px 6px; border-radius:12px; font-size:0.8rem; margin-left:8px;">0</span>`;
+        div.appendChild(row);
+      });
+      div.style.background = 'white';
+      div.style.padding = '10px';
+      div.style.borderRadius = '6px';
+      div.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+      legendDiv = div;
+      return div;
+    };
+    legend.addTo(map);
+    // expose a function to update counts
+    legend.updateCounts = function(counts){
+      if (!legendDiv) return;
+      Object.keys(counts||{}).forEach(kname => {
+        const el = legendDiv.querySelector(`[data-kel="${kname}"]`);
+        if (el) el.textContent = String(counts[kname] || 0);
+      });
+    };
+    // store legend reference
+    window._kelurahanLegend = legend;
+  }
+
+  // Prefer a simple static list file for deterministic legend + dropdowns
+  fetch('/data/kelurahan_list.json').then(r=>{
+    if (!r.ok) throw new Error('no list');
+    return r.json();
+  }).then(list => {
+    buildLegendFromList(list);
+    // start polling and rendering points after legend/list is ready
+    startPointPollingOnce();
+  }).catch(()=>{
+    // fallback: try loading geojson (may contain geometries)
+    fetch('/data/kelurahan.geojson').then(r=>r.json()).then(geo=>{
+      if (geo && geo.features) {
+        const list = geo.features.map((feature, idx) => ({ id: feature.id || idx, name: (feature.properties && (feature.properties.name || feature.properties.kelurahan || feature.properties.kecamatan)) || ('area-' + idx), color: (feature.properties && feature.properties.color) || '#FF6B6B', geometry: feature.geometry }));
+        buildLegendFromList(list);
+        startPointPollingOnce();
+      }
+    }).catch(err=>console.warn('no kelurahan data', err));
+  });
+
+  // Helper: check if point is inside polygon
+  function pointInPolygon(point, polygon) {
+    const [lng, lat] = point;
+    const vertices = polygon[0];
+    let inside = false;
+    for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
+      const [x1, y1] = vertices[i];
+      const [x2, y2] = vertices[j];
+      if ((y1 > lat) !== (y2 > lat) && lng < ((x2 - x1) * (lat - y1)) / (y2 - y1) + x1) {
+        inside = !inside;
+      }
+    }
+    return inside;
+  }
+
+  // Levenshtein distance for fuzzy matching
+  function levenshtein(a, b) {
+    a = String(a || ''); b = String(b || '');
+    const m = a.length, n = b.length;
+    if (m === 0) return n;
+    if (n === 0) return m;
+    const dp = Array.from({length: m+1}, () => new Array(n+1).fill(0));
+    for (let i=0;i<=m;i++) dp[i][0]=i;
+    for (let j=0;j<=n;j++) dp[0][j]=j;
+    for (let i=1;i<=m;i++){
+      for (let j=1;j<=n;j++){
+        const cost = a[i-1] === b[j-1] ? 0 : 1;
+        dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + cost);
+      }
+    }
+    return dp[m][n];
+  }
+
+  // Get color for point based on location
+  function getPointColor(lat, lng, pointObj) {
+    const key = matchKelurahanName(pointObj, lat, lng);
+    if (key && kelurahMap[key]) return kelurahMap[key];
+    return '#FF0000';
+  }
+
+  // Return the normalized kelurahan key (lowercased) for a point, or null
+  function matchKelurahanName(pointObj, lat, lng){
+    if (pointObj && pointObj.kelurahan) {
+      const raw = String(pointObj.kelurahan).trim();
+      const name = raw.toLowerCase();
+      // exact lookup
+      if (kelurahMap[name]) return name;
+      // fuzzy fallback: find closest by Levenshtein distance
+      let best = { name: null, dist: Infinity };
+      kelurahList.forEach(k => {
+        const kname = String(k.name || '').trim().toLowerCase();
+        if (!kname) return;
+        const d = levenshtein(name, kname);
+        if (d < best.dist) best = { name: kname, dist: d };
+      });
+      if (best.name && (best.dist <= 2 || best.dist / Math.max(best.name.length, name.length) < 0.3)) {
+        return best.name;
+      }
+    }
+
+    // spatial lookup if geometries present
+    const point = [lng, lat];
+    for (let k of kelurahList) {
+      if (k.geometry && k.geometry.type === 'Polygon' && Array.isArray(k.geometry.coordinates)) {
+        try {
+          if (pointInPolygon(point, k.geometry.coordinates)) return String(k.name || '').trim().toLowerCase();
+        } catch (e) { /* ignore malformed geometry */ }
+      }
+    }
+    return null;
+  }
+
+  // load points with kelurahan-based colors
+  let markersLayer = L.layerGroup().addTo(map);
+  function loadPoints(){
+    fetch('/api/points').then(r=>r.json()).then(points=>{
+      markersLayer.clearLayers();
+      // prepare counts per kelurahan (normalized keys)
+      const counts = {};
+      kelurahList.forEach(k => { counts[String(k.name||'').trim().toLowerCase()] = 0; });
+      points.forEach(p=>{
+        const matched = matchKelurahanName(p, p.lat, p.lng);
+        if (matched) counts[matched] = (counts[matched] || 0) + 1;
+        const color = getPointColor(p.lat, p.lng, p);
+        const m = L.circleMarker([p.lat, p.lng], {
+          radius: 10,
+          color: '#ffffff',
+          weight: 2,
+          fillColor: color,
+          fillOpacity: 0.95,
+          className: 'kel-marker'
+        }).addTo(markersLayer);
+        const kel = p.kelurahan ? `<b>Kelurahan</b>: ${p.kelurahan}<br/>` : '';
+        m.bindPopup(`${kel}<b>Catatan</b>: ${p.note || '-'}<br/><small>${p.created_at}</small>`);
+        const tooltipText = p.kelurahan ? p.kelurahan : (matched ? (kelurahList.find(k=>String(k.name||'').trim().toLowerCase()===matched)||{}).name : 'Belum ditandai');
+        m.bindTooltip(tooltipText, {direction:'top', offset:[0,-8]});
+      });
+      // store counts globally and update legend counts if available
+      try{ window._kelurahanCounts = counts; }catch(e){}
+      try{ if (window._kelurahanLegend && typeof window._kelurahanLegend.updateCounts === 'function') window._kelurahanLegend.updateCounts(counts); }catch(e){}
+      if(points.length) try{ map.fitBounds(markersLayer.getBounds(), { padding:[20,20] }); }catch(e){}
+    });
+  }
+  // startPointPollingOnce will call loadPoints once the kelurahan list is ready
+  let pollingStarted = false;
+  function startPointPollingOnce(){
+    if (pollingStarted) return;
+    pollingStarted = true;
+    loadPoints();
+    setInterval(loadPoints, 30_000);
+  }
+})();

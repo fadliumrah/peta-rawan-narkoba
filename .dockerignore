@@ -6,3 +6,6 @@ uploads/*
 !uploads/.gitkeep
 data/*.json
 !data/.gitkeep
+*.backup
+# Keep database file for Railway deployment
+!data/peta-narkoba.db

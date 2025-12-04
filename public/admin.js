@@ -34,34 +34,7 @@
   loadAdminBaseMap();
   // kelurahan boundary display removed per request
 
-  // Load kelurahan reference for dropdown/lookup but DO NOT draw polygons on admin map
-  let kelurahList = [];
-  const kelurahanSelect = document.getElementById('kelurahanSelect');
-
-  function populateKelurahanSelect(list){
-    list.forEach(k => {
-      const name = k.name || k.kelurahan || k.kecamatan;
-      const color = k.color || '#FF6B6B';
-      kelurahList.push({ name, color, geometry: k.geometry });
-      const opt = document.createElement('option');
-      opt.value = name;
-      opt.textContent = name;
-      kelurahanSelect.appendChild(opt);
-    });
-  }
-
-  // Prefer static list first, fallback to geojson with geometries
-  fetch('/data/kelurahan_list.json').then(r=>{
-    if (!r.ok) throw new Error('no list');
-    return r.json();
-  }).then(list => populateKelurahanSelect(list)).catch(()=>{
-    fetch('/data/kelurahan.geojson').then(r=>r.json()).then(geo=>{
-      if (geo && geo.features) {
-        const list = geo.features.map(f => ({ name: (f.properties && (f.properties.name || f.properties.kelurahan || f.properties.kecamatan)) || ('area-' + (f.id||Math.random())), color: (f.properties && f.properties.color) || '#FF6B6B', geometry: f.geometry }));
-        populateKelurahanSelect(list);
-      }
-    }).catch(()=>{});
-  });
+  // Kelurahan dropdown removed - using name, category, description instead
 
   let tempMarker;
   map.on('click', (e)=>{
@@ -250,17 +223,6 @@
     const ul = document.getElementById('pointsList');
     const emptyState = document.getElementById('emptyState');
     ul.innerHTML = '';
-    
-    // ensure kelurahList is loaded (in case it hasn't yet)
-    if (kelurahList.length === 0) {
-      try {
-        const r = await fetch('/data/kelurahan_list.json');
-        if (r.ok) {
-          const list = await r.json();
-          populateKelurahanSelect(list);
-        }
-      } catch (e) { /* ignore */ }
-    }
 
     if (pts.length === 0) {
       emptyState.style.display = 'block';
@@ -269,53 +231,26 @@
       pts.forEach((p, idx) => {
         const li = document.createElement('li');
         const date = new Date(p.created_at).toLocaleDateString('id-ID', { hour:'2-digit', minute:'2-digit' });
+        
+        // Category emoji mapping
+        const categoryEmoji = { rendah: '🟢', sedang: '🟡', tinggi: '🔴' };
+        const categoryText = { rendah: 'Rendah', sedang: 'Sedang', tinggi: 'Tinggi' };
 
         const infoDiv = document.createElement('div');
-        infoDiv.innerHTML = `<strong>#${idx + 1}</strong><br/><small>📍 ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</small><br/><small>📝 ${p.note || '(tanpa catatan)'}</small><br/><small style="color:#999;">🕐 ${date}</small>`;
+        infoDiv.innerHTML = `<strong>#${idx + 1} - ${p.name || '(tanpa nama)'}</strong><br/><small>${categoryEmoji[p.category] || '⚪'} ${categoryText[p.category] || p.category}</small><br/><small>📍 ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</small><br/><small>📝 ${p.description || '(tanpa deskripsi)'}</small><br/><small style="color:#999;">🕐 ${date}</small>`;
 
-        const controlsDiv = document.createElement('div');
-        controlsDiv.style.display = 'flex';
-        controlsDiv.style.gap = '8px';
-        controlsDiv.style.alignItems = 'center';
-
-        // kelurahan select
-        const sel = document.createElement('select');
-        sel.style.minWidth = '160px';
-        const emptyOpt = document.createElement('option'); emptyOpt.value = ''; emptyOpt.textContent = '-- Kelurahan --'; sel.appendChild(emptyOpt);
-        kelurahList.forEach(k => {
-          const o = document.createElement('option'); o.value = k.name; o.textContent = k.name; if (p.kelurahan && String(p.kelurahan) === String(k.name)) o.selected = true; sel.appendChild(o);
-        });
-
-        const saveBtn = document.createElement('button');
-        saveBtn.textContent = 'Simpan';
-        saveBtn.className = 'btn';
-        saveBtn.style.width = 'auto';
-        saveBtn.addEventListener('click', async () => {
-          const newKel = sel.value || '';
-          if (!newKel) { alert('Pilih kelurahan sebelum menyimpan'); return; }
-          try {
-            const r = await fetch('/api/points/' + p.id, { method: 'PATCH', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ kelurahan: newKel }) });
-            if (r.ok) { alert('Kelurahan diperbarui'); loadPoints(); }
-            else {
-              const txt = await r.text();
-              alert('Gagal menyimpan: ' + txt);
-            }
-          } catch (e) { alert('Gagal menyimpan'); }
-        });
-
-        const delBtn = document.createElement('button'); delBtn.textContent = '🗑️ Hapus'; delBtn.className='btn'; delBtn.style.background='#dc3545'; delBtn.style.color='white';
+        const delBtn = document.createElement('button'); 
+        delBtn.textContent = '🗑️ Hapus'; 
+        delBtn.className='btn btn-danger'; 
+        delBtn.style.marginTop='8px';
         delBtn.addEventListener('click', async () => {
           if (!confirm('Yakin hapus titik ini?')) return;
           await fetch('/api/points/' + p.id, { method: 'DELETE' });
           loadPoints();
         });
 
-        controlsDiv.appendChild(sel);
-        controlsDiv.appendChild(saveBtn);
-        controlsDiv.appendChild(delBtn);
-
         li.appendChild(infoDiv);
-        li.appendChild(controlsDiv);
+        li.appendChild(delBtn);
         ul.appendChild(li);
       });
     }
@@ -331,12 +266,24 @@
   document.getElementById('pointForm').addEventListener('submit', async (ev)=>{
     ev.preventDefault();
     const fd = new FormData(ev.target);
-    const payload = { lat: Number(fd.get('lat')), lng: Number(fd.get('lng')), note: fd.get('note') };
-    const selectedKel = fd.get('kelurahan');
-    if (!selectedKel || String(selectedKel).trim() === '') { alert('Kelurahan wajib diisi.'); return; }
-    payload.kelurahan = selectedKel;
+    const payload = { 
+      name: fd.get('name'),
+      lat: Number(fd.get('lat')), 
+      lng: Number(fd.get('lng')), 
+      category: fd.get('category'),
+      description: fd.get('description') || null
+    };
+    if (!payload.name || !payload.category) { 
+      alert('Nama dan kategori wajib diisi.'); 
+      return; 
+    }
     const res = await fetch('/api/points', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
-    if (res.ok) { alert('Titik ditambahkan'); ev.target.reset(); if (tempMarker){ map.removeLayer(tempMarker); tempMarker=null; } loadPoints(); }
+    if (res.ok) { 
+      alert('Titik berhasil ditambahkan'); 
+      ev.target.reset(); 
+      if (tempMarker){ map.removeLayer(tempMarker); tempMarker=null; } 
+      loadPoints(); 
+    }
     else {
       const txt = await res.text();
       alert('Gagal menambahkan titik: ' + txt);
