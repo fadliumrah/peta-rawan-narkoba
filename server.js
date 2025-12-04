@@ -221,11 +221,23 @@ app.get('/data/kelurahan.geojson', (req, res) => {
 app.get('/api/config', (req, res) => {
   res.json({ GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || '' });
 });
+
+// Health check endpoint for Railway
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Root route
+app.get('/', (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
+});
+
 // (kelurahan upload endpoint removed)
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`✅ Server started on http://localhost:${PORT}`);
+// Start server - listen on 0.0.0.0 for Railway/Docker compatibility
+const HOST = process.env.HOST || '0.0.0.0';
+app.listen(PORT, HOST, () => {
+  console.log(`✅ Server started on ${HOST}:${PORT}`);
   console.log(`📍 Public map: http://localhost:${PORT}`);
   console.log(`🔐 Admin panel: http://localhost:${PORT}/admin`);
   console.log(`👤 Admin credentials: ${ADMIN_USER} / ${ADMIN_PASS}`);
