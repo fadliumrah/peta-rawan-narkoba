@@ -63,9 +63,12 @@
     Object.keys(categoryMap).forEach(cat => {
       const info = categoryMap[cat];
       const row = document.createElement('div');
-      row.style.margin = '5px 0';
-      row.style.fontSize = '0.85rem';
-      row.innerHTML = `<span style="display:inline-block; width:12px; height:12px; background:${info.color}; border-radius:50%; margin-right:6px; vertical-align:middle;"></span><span style="vertical-align:middle;">${info.emoji} ${info.label}</span><span data-category="${cat}" style="float:right; background:#f0f0f0; padding:1px 5px; border-radius:10px; font-size:0.75rem; margin-left:6px; min-width:18px; text-align:center;">0</span>`;
+      row.style.margin = '4px 0';
+      row.style.fontSize = '0.8rem';
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.justifyContent = 'space-between';
+      row.innerHTML = `<span style="display:flex; align-items:center; gap:5px; flex:1;"><span style="width:10px; height:10px; background:${info.color}; border-radius:50%; flex-shrink:0;"></span><span style="font-size:0.8rem;">${info.emoji} ${info.label}</span></span><span data-category="${cat}" style="background:#f0f0f0; padding:2px 6px; border-radius:8px; font-size:0.7rem; min-width:20px; text-align:center; margin-left:4px;">0</span>`;
       legendContent.appendChild(row);
     });
     
@@ -97,10 +100,10 @@
     window.addEventListener('resize', checkMobile);
     
     div.style.background = 'white';
-    div.style.borderRadius = '8px';
-    div.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
-    div.style.maxWidth = '220px';
-    div.style.fontSize = '0.85rem';
+    div.style.borderRadius = '6px';
+    div.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+    div.style.maxWidth = '200px';
+    div.style.fontSize = '0.8rem';
     legendDiv = div;
     return div;
   };
