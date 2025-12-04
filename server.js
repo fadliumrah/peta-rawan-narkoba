@@ -38,22 +38,10 @@ function basicAuth(req, res, next) {
   return res.status(401).send('Authentication required');
 }
 
-// Route /admin to /admin.html (clean URL) - BEFORE static files
-app.get('/admin', basicAuth, (req, res) => {
-  const adminPath = path.join(PUBLIC_DIR, 'admin.html');
-  try {
-    const content = fs.readFileSync(adminPath, 'utf8');
-    res.type('html').send(content);
-  } catch (e) {
-    res.status(404).send('Admin page not found. Path: ' + adminPath);
-  }
-});
-
-// Protect admin static assets (admin.html, admin.js, etc.) using Basic Auth
+// Protect admin routes with Basic Auth
 app.use((req, res, next) => {
   const p = req.path || '';
-  // apply protection to any path that begins with '/admin'
-  if (p === '/admin.html' || p.startsWith('/admin/')) {
+  if (p === '/admin.html' || p === '/admin' || p.startsWith('/admin/')) {
     return basicAuth(req, res, next);
   }
   return next();
@@ -61,6 +49,11 @@ app.use((req, res, next) => {
 
 // Serve public static files
 app.use(express.static(PUBLIC_DIR));
+
+// Route /admin to /admin.html (clean URL)
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'admin.html'));
+});
 
 
 // simple JSON-file storage instead of sqlite for portability
@@ -84,33 +77,24 @@ function loadPoints(){
 }
 function savePoints(points){ fs.writeFileSync(POINTS_FILE, JSON.stringify(points, null, 2), 'utf8'); }
 
-// In-memory storage for banner (since Vercel doesn't support file writes)
-let bannerData = { 
-  dataUrl: null, 
-  caption: 'Informasi area rawan narkoba - Tanjungpinang' 
-};
+// In-memory storage + persistent file storage for banner
+let bannerCache = null;
 
 function loadBannerMeta(){
-  // Try to load from file first (for local development)
+  if (bannerCache) return bannerCache;
   try{ 
     const txt = fs.readFileSync(BANNER_META, 'utf8'); 
-    const data = JSON.parse(txt);
-    // Merge with in-memory data
-    if (data.filename) bannerData = data;
-    return bannerData;
+    bannerCache = JSON.parse(txt);
+    return bannerCache;
   } catch(e) { 
-    return bannerData; 
+    bannerCache = { dataUrl: null, caption: 'Informasi area rawan narkoba - Tanjungpinang' };
+    return bannerCache;
   }
 }
 
 function saveBannerMeta(m){ 
-  bannerData = m;
-  // Try to save to file (works in local, ignored in Vercel)
-  try {
-    fs.writeFileSync(BANNER_META, JSON.stringify(m,null,2), 'utf8');
-  } catch(e) {
-    // Ignore write errors in serverless environment
-  }
+  bannerCache = m;
+  fs.writeFileSync(BANNER_META, JSON.stringify(m,null,2), 'utf8');
 }
 
 // API: get points
@@ -239,10 +223,13 @@ app.get('/api/config', (req, res) => {
 });
 // (kelurahan upload endpoint removed)
 
-// Export for Vercel serverless
-module.exports = app;
+// Start server
+app.listen(PORT, () => {
+  console.log(`✅ Server started on http://localhost:${PORT}`);
+  console.log(`📍 Public map: http://localhost:${PORT}`);
+  console.log(`🔐 Admin panel: http://localhost:${PORT}/admin`);
+  console.log(`👤 Admin credentials: ${ADMIN_USER} / ${ADMIN_PASS}`);
+});
 
-// Only listen if not in Vercel environment
-if (process.env.VERCEL !== '1') {
-  app.listen(PORT, () => console.log(`Server started on http://localhost:${PORT}`));
-}
+// Export for Railway/other platforms
+module.exports = app;

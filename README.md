@@ -1,11 +1,25 @@
-# Peta Rawan Narkoba (Tanjungpinang) - Simple Web App
+# 🗺️ Peta Rawan Narkoba - BNN Kota Tanjungpinang
 
-This is a minimal open-source implementation of a landing page + admin UI to visualize "Peta Rawan Narkoba" using Leaflet (OpenStreetMap) and a lightweight Express + SQLite backend.
+Aplikasi web interaktif untuk visualisasi dan manajemen data area rawan narkoba di Kota Tanjungpinang menggunakan Leaflet (OpenStreetMap) dan Express.js.
 
-Features
-- User page with header/banner (uploadable by admin) and caption under the banner.
-- Leaflet map showing per-kelurahan polygons (GeoJSON) as colored areas and markers for reported user locations.
-- Admin page to upload banner/caption and add/remove points either by clicking the map or entering coordinates.
+## ✨ Fitur Utama
+
+### Halaman Publik
+- 🗺️ Peta interaktif dengan CartoDB Voyager basemap (warna hijau natural)
+- 📍 Marker point berdasarkan kelurahan dengan color coding
+- 📊 Legenda kelurahan dengan statistik jumlah point
+- 🖼️ Banner informasi yang dapat diupdate admin
+- 📱 Responsive design untuk mobile dan desktop
+
+### Admin Panel (Protected)
+- 🔐 Basic HTTP Authentication
+- ➕ Tambah/edit/hapus point lokasi rawan
+- 📍 **GPS Geolocation** - ambil koordinat langsung dari perangkat
+- 🗺️ Click map untuk tambah point
+- 🖼️ Upload banner dengan drag & drop
+- 🎨 Upload logo BNN custom
+- 📝 Edit caption dan catatan
+- ✅ Validasi kelurahan otomatis
 
 Quick start (Windows PowerShell)
 1. Install dependencies:
