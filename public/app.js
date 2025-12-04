@@ -83,15 +83,18 @@
       toggleIcon();
     });
     
-    // Auto-collapse on mobile by default
-    if (window.innerWidth <= 768) {
-      legendContent.style.display = 'none';
-      isExpanded = false;
-    } else {
-      legendContent.style.display = 'block';
-      isExpanded = true;
-    }
-    toggleIcon();
+    // Auto-collapse on mobile by default - responsive check
+    const checkMobile = () => {
+      const isMobile = window.innerWidth <= 768;
+      legendContent.style.display = isMobile ? 'none' : 'block';
+      isExpanded = !isMobile;
+      toggleIcon();
+    };
+    
+    checkMobile();
+    
+    // Re-check on window resize
+    window.addEventListener('resize', checkMobile);
     
     div.style.background = 'white';
     div.style.borderRadius = '8px';

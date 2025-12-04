@@ -21,6 +21,12 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; p
 main { padding:20px 60px; max-width:1200px; margin:0 auto; position:relative; z-index:10; }
 #map { margin:0 auto; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); position:relative; z-index:1; width:100%; height:500px; }
 
+/* Legend Base Styles */
+.legend { background:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.2); max-width:220px; overflow:hidden; }
+.legend-mobile { font-size:0.85rem; }
+.legend-header { cursor:pointer; user-select:none; padding:8px 10px; background:#f8f9fa; border-bottom:1px solid #eee; }
+.legend-content { padding:8px 10px; max-height:250px; overflow-y:auto; }
+
 /* Admin Panel */
 .admin-panel { padding:40px 60px; max-width:1400px; margin:0 auto; }
 .admin-grid { display:grid; grid-template-columns:1fr; gap:25px; max-width:1200px; margin:0 auto; justify-items:center; align-items:start; }
@@ -129,6 +135,26 @@ main { padding:20px 60px; max-width:1200px; margin:0 auto; position:relative; z-
 	.footer-contact { font-size:0.75rem; }
 }
 
+/* Legend responsive base */
+@media (max-width: 768px) {
+	.legend-mobile { max-width: 190px !important; }
+	.leaflet-bottom.leaflet-right { 
+		bottom: 10px !important; 
+		right: 10px !important;
+		max-width: 50% !important;
+	}
+}
+
+@media (max-width: 480px) {
+	.legend-mobile { max-width: 175px !important; font-size:0.82rem !important; }
+	.legend-header { padding: 7px 9px !important; }
+	.legend-content { padding: 7px 9px !important; max-height: 190px !important; }
+	.leaflet-bottom.leaflet-right { 
+		bottom: 8px !important; 
+		right: 8px !important;
+	}
+}
+
 /* Tablet responsive (≤900px) */
 @media (max-width: 900px) {
 	.nav-container, .banner-container, .admin-panel, .footer-container { padding:0 20px; }
@@ -234,6 +260,11 @@ main { padding:20px 60px; max-width:1200px; margin:0 auto; position:relative; z-
 	.footer.admin-footer p { font-size:0.7rem; }
 	
 	/* Legend ultra compact */
-	.legend-mobile { max-width: 170px !important; font-size:0.8rem !important; }
-	.leaflet-bottom.leaflet-right { bottom: 6px !important; right: 6px !important; }
+	.legend-mobile { max-width: 165px !important; font-size:0.78rem !important; }
+	.legend-header { padding: 6px 8px !important; font-size:0.8rem !important; }
+	.legend-content { padding: 6px 8px !important; max-height:180px !important; }
+	.leaflet-bottom.leaflet-right { bottom: 5px !important; right: 5px !important; }
+	
+	/* Map adjustments for very small screens */
+	#map { height: 320px !important; }
 }
