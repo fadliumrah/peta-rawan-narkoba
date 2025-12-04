@@ -39,17 +39,43 @@
 
   const legend = L.control({ position: 'bottomright' });
   let legendDiv;
+  let legendContent;
   legend.onAdd = function() {
     const div = L.DomUtil.create('div', 'legend');
-    div.innerHTML = '<h4 style="margin:0 0 10px 0; font-size:0.95rem; font-weight:700;">📍 Tingkat Kerawanan</h4>';
+    
+    // Add collapsible header for mobile
+    const header = document.createElement('div');
+    header.style.cursor = 'pointer';
+    header.style.userSelect = 'none';
+    header.innerHTML = '<h4 style="margin:0 0 10px 0; font-size:0.95rem; font-weight:700;">📍 Tingkat Kerawanan</h4>';
+    div.appendChild(header);
+    
+    // Content container (collapsible)
+    legendContent = document.createElement('div');
+    legendContent.className = 'legend-content';
     
     Object.keys(categoryMap).forEach(cat => {
       const info = categoryMap[cat];
       const row = document.createElement('div');
       row.style.margin = '6px 0';
       row.innerHTML = `<span style="display:inline-block; width:14px; height:14px; background:${info.color}; border-radius:50%; margin-right:8px; vertical-align:middle;"></span><small style="vertical-align:middle;">${info.emoji} ${info.label}</small><span data-category="${cat}" style="float:right; background:#eee; padding:2px 6px; border-radius:12px; font-size:0.8rem; margin-left:8px;">0</span>`;
-      div.appendChild(row);
+      legendContent.appendChild(row);
     });
+    
+    div.appendChild(legendContent);
+    
+    // Toggle on mobile when tapping header
+    header.addEventListener('click', function() {
+      if (window.innerWidth <= 600) {
+        const isHidden = legendContent.style.display === 'none';
+        legendContent.style.display = isHidden ? 'block' : 'none';
+      }
+    });
+    
+    // Auto-collapse on mobile, expanded on desktop
+    if (window.innerWidth <= 600) {
+      legendContent.style.display = 'none';
+    }
     
     div.style.background = 'white';
     div.style.padding = '10px';
