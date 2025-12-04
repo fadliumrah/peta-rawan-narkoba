@@ -6,20 +6,20 @@ Aplikasi web interaktif untuk visualisasi dan manajemen data area rawan narkoba 
 
 ### Halaman Publik
 - 🗺️ Peta interaktif dengan CartoDB Voyager basemap (warna hijau natural)
-- 📍 Marker point berdasarkan kelurahan dengan color coding
-- 📊 Legenda kelurahan dengan statistik jumlah point
+- 📍 Marker point dengan **3 tingkat kerawanan** (Rendah 🟢 / Sedang 🟡 / Tinggi 🔴)
+- 📊 Legenda tingkat kerawanan dengan statistik real-time
 - 🖼️ Banner informasi yang dapat diupdate admin
 - 📱 Responsive design untuk mobile dan desktop
 
 ### Admin Panel (Protected)
 - 🔐 Basic HTTP Authentication
-- ➕ Tambah/edit/hapus point lokasi rawan
+- ➕ Tambah/hapus point lokasi rawan dengan kategori risiko
 - 📍 **GPS Geolocation** - ambil koordinat langsung dari perangkat
 - 🗺️ Click map untuk tambah point
 - 🖼️ Upload banner dengan drag & drop
 - 🎨 Upload logo BNN custom
-- 📝 Edit caption dan catatan
-- ✅ Validasi kelurahan otomatis
+- 📝 Input nama lokasi, kategori, dan deskripsi detail
+- 💾 **SQLite Database** - data tersimpan aman dan permanen
 
 Quick start (Windows PowerShell)
 1. Install dependencies:
@@ -45,6 +45,28 @@ $env:ADMIN_USER = 'youruser'; $env:ADMIN_PASS = 'yourpass'; npm start
 - When you open `admin.html` the browser will prompt for username/password.
 
 
-Notes
-- The app ships with a small sample `public/data/kelurahan.geojson`. Replace it with official Tanjungpinang kelurahan GeoJSON for production.
-- There is no admin authentication in this scaffold — add auth before deploying publicly.
+## 💾 Database
+
+Aplikasi menggunakan **SQLite** (better-sqlite3) untuk storage:
+- Database file: `data/peta-narkoba.db`
+- Auto-migration dari JSON files (jika ada)
+- 3 tabel: `points`, `banner`, `logo`
+- Lihat detail di [DATABASE_MIGRATION.md](DATABASE_MIGRATION.md)
+
+## 📊 Data Structure
+
+**Points** (Lokasi Rawan):
+- `name` - Nama lokasi
+- `lat`, `lng` - Koordinat GPS
+- `category` - Kategori: 'rendah', 'sedang', 'tinggi'
+- `description` - Deskripsi detail (optional)
+
+**Kategori Kerawanan**:
+- 🟢 **Rendah** - Hijau (#4CAF50)
+- 🟡 **Sedang** - Kuning (#FFC107)
+- 🔴 **Tinggi** - Merah (#F44336)
+
+## 📝 Notes
+- Change admin credentials sebelum deploy (gunakan environment variables)
+- Database di-backup otomatis saat push ke Railway
+- Kelurahan boundaries sudah dihapus, fokus pada category-based risk levels
