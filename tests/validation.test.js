@@ -29,6 +29,30 @@ function createMockResponse() {
 
 const mockNext = jest.fn();
 
+/**
+ * Helper to run validation middleware without the error handler
+ * (which is always the last item in the validation chain)
+ */
+async function runValidatorsOnly(validators, req, res, next) {
+  const validationRulesOnly = validators.slice(0, -1); // Exclude handleValidationErrors
+  for (const validator of validationRulesOnly) {
+    if (typeof validator === 'function') {
+      await validator(req, res, next);
+    }
+  }
+}
+
+/**
+ * Helper to run all validators including error handler
+ */
+async function runAllValidators(validators, req, res, next) {
+  for (const validator of validators) {
+    if (typeof validator === 'function') {
+      await validator(req, res, next);
+    }
+  }
+}
+
 describe('Validation Middleware', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -46,11 +70,7 @@ describe('Validation Middleware', () => {
       const res = createMockResponse();
 
       // Run all validators
-      for (const validator of validatePoint) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      await runAllValidators(validatePoint, req, res, mockNext);
 
       // Should not have validation errors
       const errors = validationResult(req);
@@ -65,12 +85,8 @@ describe('Validation Middleware', () => {
       });
       const res = createMockResponse();
 
-      // Run validators
-      for (const validator of validatePoint.slice(0, -1)) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      // Run validators without error handler
+      await runValidatorsOnly(validatePoint, req, res, mockNext);
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(false);
@@ -86,11 +102,7 @@ describe('Validation Middleware', () => {
       });
       const res = createMockResponse();
 
-      for (const validator of validatePoint.slice(0, -1)) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      await runValidatorsOnly(validatePoint, req, res, mockNext);
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(false);
@@ -106,11 +118,7 @@ describe('Validation Middleware', () => {
       });
       const res = createMockResponse();
 
-      for (const validator of validatePoint.slice(0, -1)) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      await runValidatorsOnly(validatePoint, req, res, mockNext);
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(false);
@@ -126,11 +134,7 @@ describe('Validation Middleware', () => {
       });
       const res = createMockResponse();
 
-      for (const validator of validatePoint.slice(0, -1)) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      await runValidatorsOnly(validatePoint, req, res, mockNext);
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(false);
@@ -147,11 +151,7 @@ describe('Validation Middleware', () => {
       });
       const res = createMockResponse();
 
-      for (const validator of validateNews) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      await runAllValidators(validateNews, req, res, mockNext);
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(true);
@@ -164,11 +164,7 @@ describe('Validation Middleware', () => {
       });
       const res = createMockResponse();
 
-      for (const validator of validateNews.slice(0, -1)) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      await runValidatorsOnly(validateNews, req, res, mockNext);
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(false);
@@ -182,11 +178,7 @@ describe('Validation Middleware', () => {
       });
       const res = createMockResponse();
 
-      for (const validator of validateNews.slice(0, -1)) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      await runValidatorsOnly(validateNews, req, res, mockNext);
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(false);
@@ -199,11 +191,7 @@ describe('Validation Middleware', () => {
       const req = createMockRequest({}, { id: '123' });
       const res = createMockResponse();
 
-      for (const validator of validateId) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      await runAllValidators(validateId, req, res, mockNext);
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(true);
@@ -213,11 +201,7 @@ describe('Validation Middleware', () => {
       const req = createMockRequest({}, { id: '-1' });
       const res = createMockResponse();
 
-      for (const validator of validateId.slice(0, -1)) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      await runValidatorsOnly(validateId, req, res, mockNext);
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(false);
@@ -227,11 +211,7 @@ describe('Validation Middleware', () => {
       const req = createMockRequest({}, { id: 'abc' });
       const res = createMockResponse();
 
-      for (const validator of validateId.slice(0, -1)) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      await runValidatorsOnly(validateId, req, res, mockNext);
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(false);
@@ -243,11 +223,7 @@ describe('Validation Middleware', () => {
       const req = createMockRequest({}, {}, { q: 'test search' });
       const res = createMockResponse();
 
-      for (const validator of validateSearchQuery) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      await runAllValidators(validateSearchQuery, req, res, mockNext);
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(true);
@@ -257,11 +233,7 @@ describe('Validation Middleware', () => {
       const req = createMockRequest({}, {}, { q: '' });
       const res = createMockResponse();
 
-      for (const validator of validateSearchQuery) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      await runAllValidators(validateSearchQuery, req, res, mockNext);
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(true);
@@ -271,11 +243,7 @@ describe('Validation Middleware', () => {
       const req = createMockRequest({}, {}, { q: 'A'.repeat(201) });
       const res = createMockResponse();
 
-      for (const validator of validateSearchQuery.slice(0, -1)) {
-        if (typeof validator === 'function') {
-          await validator(req, res, mockNext);
-        }
-      }
+      await runValidatorsOnly(validateSearchQuery, req, res, mockNext);
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(false);

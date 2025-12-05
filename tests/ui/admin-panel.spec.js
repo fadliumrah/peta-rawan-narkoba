@@ -30,10 +30,10 @@ test.describe('Admin Panel', () => {
   });
 
   test('should load admin page with authentication', async ({ page, context }) => {
-    // Set credentials
+    // Set credentials using test constants
     await context.setHTTPCredentials({
-      username: process.env.ADMIN_USER || 'admin',
-      password: process.env.ADMIN_PASS || 'password'
+      username: ADMIN_USER,
+      password: ADMIN_PASS
     });
 
     await page.goto('/admin');
@@ -45,8 +45,8 @@ test.describe('Admin Panel', () => {
 
   test('should display point management form', async ({ page, context }) => {
     await context.setHTTPCredentials({
-      username: process.env.ADMIN_USER || 'admin',
-      password: process.env.ADMIN_PASS || 'password'
+      username: ADMIN_USER,
+      password: ADMIN_PASS
     });
 
     await page.goto('/admin');
@@ -64,8 +64,8 @@ test.describe('Admin Panel', () => {
 
   test('should display mini map for coordinate selection', async ({ page, context }) => {
     await context.setHTTPCredentials({
-      username: process.env.ADMIN_USER || 'admin',
-      password: process.env.ADMIN_PASS || 'password'
+      username: ADMIN_USER,
+      password: ADMIN_PASS
     });
 
     await page.goto('/admin');
@@ -85,8 +85,8 @@ test.describe('Admin Panel', () => {
 
   test('should have GPS button', async ({ page, context }) => {
     await context.setHTTPCredentials({
-      username: process.env.ADMIN_USER || 'admin',
-      password: process.env.ADMIN_PASS || 'password'
+      username: ADMIN_USER,
+      password: ADMIN_PASS
     });
 
     await page.goto('/admin');
@@ -97,8 +97,8 @@ test.describe('Admin Panel', () => {
 
   test('should validate form inputs', async ({ page, context }) => {
     await context.setHTTPCredentials({
-      username: process.env.ADMIN_USER || 'admin',
-      password: process.env.ADMIN_PASS || 'password'
+      username: ADMIN_USER,
+      password: ADMIN_PASS
     });
 
     await page.goto('/admin');
@@ -117,8 +117,8 @@ test.describe('Admin Panel', () => {
 
   test('should have banner upload section', async ({ page, context }) => {
     await context.setHTTPCredentials({
-      username: process.env.ADMIN_USER || 'admin',
-      password: process.env.ADMIN_PASS || 'password'
+      username: ADMIN_USER,
+      password: ADMIN_PASS
     });
 
     await page.goto('/admin');
@@ -133,8 +133,8 @@ test.describe('Admin Panel', () => {
 
   test('should display points list', async ({ page, context }) => {
     await context.setHTTPCredentials({
-      username: process.env.ADMIN_USER || 'admin',
-      password: process.env.ADMIN_PASS || 'password'
+      username: ADMIN_USER,
+      password: ADMIN_PASS
     });
 
     await page.goto('/admin');

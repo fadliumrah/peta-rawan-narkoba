@@ -7,7 +7,11 @@
  * @param {Error} err - Error object
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function (required by Express)
+ * @param {Function} next - Express next middleware function
+ * 
+ * Note: The 'next' parameter is required by Express error handler signature
+ * even though it's not used in this implementation. Express identifies error
+ * handlers by their 4-parameter signature (err, req, res, next).
  */
 // eslint-disable-next-line no-unused-vars
 function errorHandler(err, req, res, next) {
