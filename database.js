@@ -174,14 +174,27 @@ function seedSampleData() {
     let bannerData = null;
     let bannerCaption = 'Informasi Area Rawan Narkoba - Kota Tanjungpinang';
     
-    // Try to load from backup file first (persists across redeploys if committed to git)
+    // Try to load banner from physical file first (like logo system)
     try {
       const backupPath = path.join(__dirname, 'banner-backup.json');
       if (fs.existsSync(backupPath)) {
         const backup = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
-        bannerData = backup.image_data;
-        bannerCaption = backup.caption || bannerCaption;
-        console.log('✅ Loaded banner from backup file');
+        
+        // Check if banner file exists in public directory
+        if (backup.filename) {
+          const bannerFilePath = path.join(__dirname, 'public', backup.filename);
+          if (fs.existsSync(bannerFilePath)) {
+            bannerData = `/${backup.filename}`;
+            bannerCaption = backup.caption || bannerCaption;
+            console.log('✅ Loaded banner from physical file:', backup.filename);
+          }
+        }
+        // Fallback to old base64 format if exists
+        else if (backup.image_data) {
+          bannerData = backup.image_data;
+          bannerCaption = backup.caption || bannerCaption;
+          console.log('✅ Loaded banner from backup (base64 format)');
+        }
       }
     } catch (backupErr) {
       console.warn('⚠️ Could not load banner backup:', backupErr.message);

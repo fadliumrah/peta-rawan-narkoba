@@ -154,18 +154,40 @@ app.post('/api/banner', basicAuth, (req, res) => {
     const data = req.body.data; // base64 string with data:... prefix
     if (!data) return res.status(400).json({ error: 'data (base64) required' });
     
-    db.updateBanner(data, caption);
-    
-    // Backup banner to JSON file for persistence across redeploys
+    // Save banner as physical file (like logo) for permanence
     try {
-      const bannerBackup = { image_data: data, caption: caption };
+      // Extract base64 data and file extension
+      const match = data.match(/^data:image\/(\w+);base64,(.*)$/);
+      const ext = match ? match[1] : 'png';
+      const b64 = match ? match[2] : data;
+      const buffer = Buffer.from(b64, 'base64');
+      
+      // Save to public directory as banner-bnn.{ext}
+      const bannerFilename = `banner-bnn.${ext}`;
+      const bannerPath = path.join(PUBLIC_DIR, bannerFilename);
+      fs.writeFileSync(bannerPath, buffer);
+      console.log('✅ Banner saved to physical file:', bannerPath);
+      
+      // Also update database with file URL instead of base64
+      const fileUrl = `/${bannerFilename}`;
+      db.updateBanner(fileUrl, caption);
+      
+      // Backup banner info to JSON
+      const bannerBackup = { 
+        filename: bannerFilename, 
+        caption: caption,
+        updated_at: new Date().toISOString()
+      };
       fs.writeFileSync(path.join(__dirname, 'banner-backup.json'), JSON.stringify(bannerBackup, null, 2));
-      console.log('✅ Banner backed up to banner-backup.json');
-    } catch (backupErr) {
-      console.warn('⚠️ Failed to backup banner:', backupErr.message);
+      console.log('✅ Banner metadata backed up to banner-backup.json');
+      
+      res.json({ ok: true, caption, filename: bannerFilename });
+    } catch (saveErr) {
+      console.error('Failed to save banner as file:', saveErr);
+      // Fallback to old method
+      db.updateBanner(data, caption);
+      res.json({ ok: true, caption });
     }
-    
-    res.json({ ok: true, caption });
   } catch (err) {
     console.error('Error uploading banner:', err);
     res.status(500).json({ error: 'Failed to upload banner' });
