@@ -1,8 +1,9 @@
 [phases.setup]
 nixPkgs = ["nodejs_20", "python3"]
+aptPkgs = ["build-essential"]
 
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["npm ci --include=optional"]
 
 [phases.build]
 cmds = []

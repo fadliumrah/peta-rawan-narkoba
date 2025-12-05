@@ -385,6 +385,31 @@
     placeholder: 'Tulis isi berita lengkap dengan format profesional... (Tekan Enter 2x untuk spasi antar paragraf)'
   });
 
+  // Auto-grow editor berdasarkan konten
+  function adjustEditorHeight() {
+    const editor = quill.root;
+    const container = editor.closest('.ql-container');
+    
+    // Reset height untuk mendapatkan scrollHeight yang akurat
+    editor.style.height = 'auto';
+    
+    // Set minimum 200px, maksimum berdasarkan konten
+    const minHeight = 200;
+    const contentHeight = editor.scrollHeight;
+    const newHeight = Math.max(minHeight, contentHeight);
+    
+    editor.style.height = newHeight + 'px';
+    container.style.height = 'auto';
+  }
+
+  // Panggil adjustEditorHeight saat ada perubahan teks
+  quill.on('text-change', function() {
+    adjustEditorHeight();
+  });
+
+  // Set initial height
+  setTimeout(adjustEditorHeight, 100);
+
   // News image preview
   const newsImageInput = document.getElementById('newsImageInput');
   const newsImagePreview = document.getElementById('newsImagePreview');
