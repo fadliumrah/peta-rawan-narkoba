@@ -330,22 +330,18 @@
   document.getElementById('pointForm').addEventListener('submit', async (ev)=>{
     ev.preventDefault();
     const fd = new FormData(ev.target);
-    const kelurahan = fd.get('category');
+    const name = fd.get('name');
     const description = fd.get('description') || '';
-    
-    // Auto-generate name from kelurahan
-    const name = `Kelurahan ${kelurahan}`;
     
     const payload = { 
       name: name,
       lat: Number(fd.get('lat')), 
       lng: Number(fd.get('lng')), 
-      category: kelurahan,
       description: description
     };
     
-    if (!payload.category) { 
-      alert('Kelurahan wajib dipilih.'); 
+    if (!payload.name) { 
+      alert('Nama kelurahan/lokasi wajib diisi.'); 
       return; 
     }
     

@@ -74,18 +74,16 @@ app.get('/api/points', (req, res) => {
 // API: add point
 app.post('/api/points', basicAuth, (req, res) => {
   try {
-    const { name, lat, lng, category, description } = req.body;
+    const { name, lat, lng, description } = req.body;
     if (typeof lat === 'undefined' || typeof lng === 'undefined') {
       return res.status(400).json({ error: 'lat,lng required' });
     }
-    if (!name || !category) {
-      return res.status(400).json({ error: 'name and category required' });
-    }
-    if (!['rendah', 'sedang', 'tinggi'].includes(category)) {
-      return res.status(400).json({ error: 'category must be rendah, sedang, or tinggi' });
+    if (!name) {
+      return res.status(400).json({ error: 'name required' });
     }
     
-    const id = db.createPoint(name, Number(lat), Number(lng), category, description || null);
+    // Use 'sedang' as default category for backward compatibility
+    const id = db.createPoint(name, Number(lat), Number(lng), 'sedang', description || null);
     const point = db.getPointById(id);
     res.json(point);
   } catch (err) {
@@ -113,16 +111,12 @@ app.patch('/api/points/:id', basicAuth, (req, res) => {
     const point = db.getPointById(id);
     if (!point) return res.status(404).json({ error: 'not found' });
     
-    const { name, lat, lng, category, description } = req.body;
+    const { name, lat, lng, description } = req.body;
     const updatedName = name !== undefined ? name : point.name;
     const updatedLat = lat !== undefined ? Number(lat) : point.lat;
     const updatedLng = lng !== undefined ? Number(lng) : point.lng;
-    const updatedCategory = category !== undefined ? category : point.category;
+    const updatedCategory = 'sedang'; // Keep for backward compatibility
     const updatedDescription = description !== undefined ? description : point.description;
-    
-    if (updatedCategory && !['rendah', 'sedang', 'tinggi'].includes(updatedCategory)) {
-      return res.status(400).json({ error: 'category must be rendah, sedang, or tinggi' });
-    }
     
     db.updatePoint(id, updatedName, updatedLat, updatedLng, updatedCategory, updatedDescription);
     const updated = db.getPointById(id);
