@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin - Peta Rawan Narkoba</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="/styles.css?v=2.3" />
+  <link rel="stylesheet" href="/styles.css?v=2.6" />
 </head>
 <body>
   <nav class="top-nav admin-nav">
@@ -14,43 +14,20 @@
         <img class="nav-logo" src="/logo-bnn.png" id="logoImg" alt="Logo BNN" />
         <div class="nav-text">
           <h1 class="nav-title">Admin Dashboard</h1>
-          <p class="nav-subtitle">Kelola Data Rawan Narkoba</p>
+          <p class="nav-subtitle">Kelola Data Rawan Narkoba - Tanjungpinang</p>
         </div>
       </div>
     </div>
   </nav>
 
   <section class="admin-panel">
-    <!-- Map Section - Full Width -->
-    <div class="admin-card full-width" style="margin-bottom:20px; padding:0; overflow:hidden;">
-      <h2 class="card-title" style="border-radius:12px 12px 0 0; margin:0; padding:12px 16px; background:#f8f9fa;">🗺️ Peta Interaktif - Klik untuk Tambah Titik</h2>
+    <!-- Map Section - Full Width with Clean Design -->
+    <div class="admin-card full-width" style="margin-bottom:20px; padding:0; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+      <h2 class="card-title" style="border-radius:12px 12px 0 0; margin:0; padding:16px 20px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; font-size:1.1rem; font-weight:600;">📍 Pilih Lokasi pada Peta</h2>
       <div id="adminMap" class="admin-map-large"></div>
     </div>
 
     <div class="admin-grid">
-      <!-- Logo Section -->
-      <div class="admin-card">
-        <h2 class="card-title">🏛️ Update Logo BNN</h2>
-        <form id="logoForm" class="form-group card-content">
-          <div style="display:flex; gap:20px; align-items:center; margin-bottom:20px;">
-            <div style="flex-shrink:0;">
-              <label style="font-weight:600; margin-bottom:10px; display:block; font-size:0.9rem;">Preview:</label>
-              <img id="logoPreview" src="/logo-bnn.svg" alt="Logo BNN" style="width:70px; height:70px; border-radius:6px; border:2px solid #ddd; background:white; padding:4px;" />
-            </div>
-            <div style="flex:1;">
-              <div id="logoDragDrop" class="logo-drag-drop">
-                <input type="file" id="logoInput" name="logo" accept="image/svg+xml,image/png,image/jpeg" style="display:none;" />
-                <div style="text-align:center; padding:20px;">
-                  <p style="margin:0 0 8px 0; font-weight:600; color:#333;">📁 Drop logo di sini atau klik</p>
-                  <p style="margin:0; font-size:0.85rem; color:#666;">SVG, PNG, atau JPG (max 2MB)</p>
-                </div>
-              </div>
-              <button type="submit" class="btn btn-danger" style="margin-top:10px; width:100%;">🖼️ Upload Logo</button>
-            </div>
-          </div>
-        </form>
-      </div>
-
       <!-- Banner Section -->
       <div class="admin-card">
         <h2 class="card-title">📸 Update Banner</h2>
@@ -67,23 +44,34 @@
         </form>
       </div>
 
-      <!-- Map Section -->
-      <div class="admin-card full-width">
-        <h2 class="card-title">📍 Pilih Lokasi pada Peta</h2>
-        <p class="card-subtitle">Klik pada peta untuk memilih koordinat titik pengguna</p>
-        <div id="adminMap" class="admin-map-large"></div>
+      <!-- Logo Section -->
+      <div class="admin-card">
+        <h2 class="card-title">🏛️ Update Logo BNN</h2>
+        <form id="logoForm" class="form-group card-content">
+          <div style="display:flex; gap:20px; align-items:center;">
+            <div style="flex-shrink:0;">
+              <img id="logoPreview" src="/logo-bnn.svg" alt="Logo BNN" style="width:60px; height:60px; border-radius:6px; border:2px solid #ddd; background:white; padding:4px;" />
+            </div>
+            <div style="flex:1;">
+              <div id="logoDragDrop" class="logo-drag-drop">
+                <input type="file" id="logoInput" name="logo" accept="image/svg+xml,image/png,image/jpeg" style="display:none;" />
+                <div style="text-align:center; padding:15px;">
+                  <p style="margin:0 0 6px 0; font-weight:600; color:#333; font-size:0.9rem;">📁 Drop logo atau klik</p>
+                  <p style="margin:0; font-size:0.8rem; color:#666;">SVG, PNG, JPG (max 2MB)</p>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-danger" style="margin-top:10px; width:100%;">🖼️ Upload Logo</button>
+            </div>
+          </div>
+        </form>
       </div>
 
       <!-- Point Form Section -->
-      <div class="admin-card">
-        <h2 class="card-title">➕ Tambah Titik Pengguna</h2>
+      <div class="admin-card full-width">
+        <h2 class="card-title">➕ Tambah Titik Rawan Narkoba</h2>
         <form id="pointForm" class="form-group card-content">
-          <div style="display:flex; gap:10px; margin-bottom:15px; width:100%;">
-            <button type="button" id="gpsBtn" class="btn btn-primary" style="flex:1;">📍 Ambil Koordinat dari GPS</button>
-            <div id="gpsStatus" style="flex:1; padding:10px; background:#f0f0f0; border-radius:6px; display:none; align-content:center; font-size:0.9rem; color:#666;">
-              <span id="gpsStatusText">Mengakses GPS...</span>
-            </div>
-          </div>
+          <button type="button" id="gpsBtn" class="btn btn-primary" style="margin-bottom:15px; width:100%;">📍 Ambil Koordinat dari GPS Saya</button>
+          
           <div class="form-row">
             <div class="form-field">
               <label>Latitude:</label>
@@ -94,24 +82,43 @@
               <input type="number" step="any" name="lng" placeholder="cth: 104.4510" required />
             </div>
           </div>
+          
           <div class="form-field">
-            <label>Nama Lokasi:</label>
-            <input type="text" name="name" placeholder="Nama lokasi, contoh: Kelurahan Tanjung Pinang Timur" required />
-          </div>
-          <div class="form-field">
-            <label>Kategori Rawan:</label>
-            <select name="category" required>
-              <option value="">-- Pilih kategori --</option>
-              <option value="rendah">🟢 Rendah</option>
-              <option value="sedang">🟡 Sedang</option>
-              <option value="tinggi">🔴 Tinggi</option>
+            <label>Kelurahan (wajib):</label>
+            <select name="category" required style="font-size:0.95rem;">
+              <option value="">-- Pilih kelurahan --</option>
+              <option value="Dompak">Dompak</option>
+              <option value="Sei Jang">Sei Jang</option>
+              <option value="Tanjung Ayun Sakti">Tanjung Ayun Sakti</option>
+              <option value="Tanjungpinang Timur">Tanjungpinang Timur</option>
+              <option value="Tanjung Unggat">Tanjung Unggat</option>
+              <option value="Bukit Cermin">Bukit Cermin</option>
+              <option value="Kampung Baru">Kampung Baru</option>
+              <option value="Kemboja">Kemboja</option>
+              <option value="Tanjungpinang Barat">Tanjungpinang Barat</option>
+              <option value="Kampung Bugis">Kampung Bugis</option>
+              <option value="Penyengat">Penyengat</option>
+              <option value="Senggarang">Senggarang</option>
+              <option value="Tanjungpinang Kota">Tanjungpinang Kota</option>
+              <option value="Air Raja">Air Raja</option>
+              <option value="Batu IX">Batu IX</option>
+              <option value="Kampung Bulang">Kampung Bulang</option>
+              <option value="Melayu Kota Piring">Melayu Kota Piring</option>
+              <option value="Pinang Kencana">Pinang Kencana</option>
             </select>
           </div>
+          
           <div class="form-field">
-            <label>Deskripsi:</label>
-            <textarea name="description" placeholder="Deskripsi detail tentang lokasi ini..." rows="3"></textarea>
+            <label>Nama Lokasi:</label>
+            <input type="text" name="name" placeholder="Contoh: Jalan Raya Kampung Bugis RT 02" required />
           </div>
-          <button type="submit" class="btn btn-danger">➕ Tambah Titik</button>
+          
+          <div class="form-field">
+            <label>Catatan:</label>
+            <textarea name="description" placeholder="Keterangan tambahan tentang lokasi ini..." rows="3"></textarea>
+          </div>
+          
+          <button type="submit" class="btn btn-danger" style="font-size:1rem; padding:12px;">➕ Tambah Titik Lokasi</button>
         </form>
       </div>
 
@@ -140,6 +147,6 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="/admin.js?v=2.3"></script>
+  <script src="/admin.js?v=2.6"></script>
 </body>
 </html>
