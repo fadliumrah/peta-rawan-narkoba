@@ -330,8 +330,11 @@
   document.getElementById('pointForm').addEventListener('submit', async (ev)=>{
     ev.preventDefault();
     const fd = new FormData(ev.target);
-    const name = fd.get('name');
+    const kelurahan = fd.get('kelurahan');
     const description = fd.get('description') || '';
+    
+    // Auto-generate name from kelurahan
+    const name = `Kelurahan ${kelurahan}`;
     
     const payload = { 
       name: name,
@@ -340,8 +343,8 @@
       description: description
     };
     
-    if (!payload.name) { 
-      alert('Nama kelurahan/lokasi wajib diisi.'); 
+    if (!kelurahan) { 
+      alert('Kelurahan wajib dipilih.'); 
       return; 
     }
     
