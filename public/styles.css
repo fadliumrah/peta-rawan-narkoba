@@ -27,20 +27,53 @@ main { padding:30px 40px; max-width:1400px; margin:0 auto; position:relative; z-
 .legend-header { cursor:pointer; user-select:none; padding:8px 10px; background:#f8f9fa; border-bottom:1px solid #eee; }
 .legend-content { padding:8px 10px; max-height:250px; overflow-y:auto; }
 
-/* Admin Panel - Clean Modern Layout */
-.admin-panel { padding:30px 20px; max-width:1400px; margin:0 auto; background:#f8f9fa; min-height:calc(100vh - 200px); }
-.admin-grid { display:flex; flex-direction:column; align-items:center; gap:20px; max-width:1400px; margin:0 auto; }
-.admin-grid .admin-card { width:100%; max-width:600px; }
-.admin-grid .full-width { width:100%; max-width:1400px; }
+/* Admin Panel - Modern Gradient Background */
+.admin-panel { padding:40px 20px; max-width:1400px; margin:0 auto; background:linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 50%, #f3f4f6 100%); min-height:calc(100vh - 200px); }
+.admin-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(500px, 1fr)); gap:24px; max-width:1400px; margin:0 auto; }
+.admin-grid .admin-card { width:100%; }
+.admin-grid .full-width { grid-column:1 / -1; width:100%; }
 
-/* Admin Cards - Modern Design */
-.admin-card { background:white; border-radius:16px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,0.08); transition:all 0.3s ease; width:100%; border:1px solid #e5e7eb; }
-.admin-card.full-width { max-width:100%; }
-.admin-card:hover { transform:translateY(-4px); box-shadow:0 8px 24px rgba(0,0,0,0.12); }
-.card-title { margin:0; padding:16px 20px; color:#1f2937; font-size:1.05rem; font-weight:600; background:#f9fafb; border-bottom:1px solid #e5e7eb; text-align:center; }
-.card-subtitle { margin:0; padding:0 20px; color:#6b7280; font-size:0.9rem; text-align:center; }
-.card-content { background:transparent; box-shadow:none; padding:28px; margin:0; display:flex; flex-direction:column; align-items:center; width:100%; max-width:600px; margin-left:auto; margin-right:auto; }
-.admin-card.full-width .card-content { max-width:100%; padding:28px 40px; }
+/* Admin Cards - Modern Glassmorphism Design */
+.admin-card { 
+  background:rgba(255, 255, 255, 0.95); 
+  backdrop-filter:blur(10px);
+  border-radius:20px; 
+  overflow:hidden; 
+  box-shadow:0 8px 32px rgba(31, 38, 135, 0.15), 0 2px 8px rgba(0, 0, 0, 0.05); 
+  transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+  width:100%; 
+  border:1px solid rgba(255, 255, 255, 0.3);
+}
+.admin-card.full-width { grid-column:1 / -1; }
+.admin-card:hover { 
+  transform:translateY(-6px) scale(1.01); 
+  box-shadow:0 12px 48px rgba(31, 38, 135, 0.25), 0 4px 16px rgba(0, 0, 0, 0.1);
+  border:1px solid rgba(99, 102, 241, 0.3);
+}
+.card-title { 
+  margin:0; 
+  padding:20px 24px; 
+  color:#1e293b; 
+  font-size:1.15rem; 
+  font-weight:700; 
+  background:linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); 
+  color:white;
+  text-align:center;
+  letter-spacing:0.3px;
+  box-shadow:0 4px 6px rgba(99, 102, 241, 0.1);
+}
+.card-subtitle { margin:0; padding:0 24px; color:#6b7280; font-size:0.9rem; text-align:center; }
+.card-content { 
+  background:transparent; 
+  box-shadow:none; 
+  padding:32px 28px; 
+  margin:0; 
+  display:flex; 
+  flex-direction:column; 
+  align-items:center; 
+  width:100%;
+}
+.admin-card.full-width .card-content { padding:32px 40px; }
 
 /* Form row: two columns on desktop */
 .form-row { display:flex; gap:12px; width:100%; justify-content:center; }
@@ -92,38 +125,153 @@ main { padding:30px 40px; max-width:1400px; margin:0 auto; position:relative; z-
 /* Marker visual polish */
 .kel-marker { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.18)); }
 
-/* Form Fields - Modern Input Design */
-.form-field { margin-bottom:16px; width:100%; text-align:center; }
+/* Form Fields - Modern Glassmorphism Input Design */
+.form-field { margin-bottom:20px; width:100%; text-align:center; }
 .form-field:last-child { margin-bottom:0; }
-.form-field label { display:block; font-weight:600; margin-bottom:8px; color:#374151; font-size:0.95rem; text-align:center; }
+.form-field label { 
+  display:block; 
+  font-weight:600; 
+  margin-bottom:10px; 
+  color:#1e293b; 
+  font-size:0.95rem; 
+  text-align:center;
+  letter-spacing:0.3px;
+}
 .form-field input[type="text"], 
 .form-field input[type="number"],
 .form-field select,
-.form-field textarea { width:100%; padding:12px 14px; border:2px solid #e5e7eb; border-radius:10px; font-size:0.95rem; transition:all 0.3s; margin:0; font-family:inherit; background:white; }
+.form-field textarea { 
+  width:100%; 
+  padding:14px 16px; 
+  border:2px solid #e0e7ff; 
+  border-radius:12px; 
+  font-size:0.95rem; 
+  transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+  margin:0; 
+  font-family:inherit; 
+  background:rgba(255, 255, 255, 0.8);
+  backdrop-filter:blur(10px);
+  box-shadow:0 2px 8px rgba(99, 102, 241, 0.05);
+}
 .form-field input[type="text"]:focus, 
 .form-field input[type="number"]:focus,
 .form-field select:focus,
-.form-field textarea:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,0.1); }
+.form-field textarea:focus { 
+  outline:none; 
+  border-color:#6366f1; 
+  box-shadow:0 0 0 4px rgba(99, 102, 241, 0.15), 0 4px 12px rgba(99, 102, 241, 0.1);
+  background:white;
+  transform:translateY(-2px);
+}
 
-/* File Input Styling */
-.file-input-wrapper { position:relative; margin-bottom:15px; }
+/* File Input Styling - Modern Drag & Drop */
+.file-input-wrapper { position:relative; margin-bottom:20px; }
 #bannerInput { display:none; }
-.file-label { display:block; padding:20px; background:#f5f5f5; border:2px dashed #ddd; border-radius:8px; text-align:center; cursor:pointer; transition:all 0.3s; font-weight:600; color:#666; max-width:420px; margin:0 auto; }
-.file-label:hover { background:#efefef; border-color:#c41e3a; color:#c41e3a; }
-#bannerInput:focus + .file-label { border-color:#c41e3a; box-shadow:0 0 0 3px rgba(196,30,58,0.1); }
+.file-label { 
+  display:block; 
+  padding:28px 24px; 
+  background:linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+  border:3px dashed #c7d2fe; 
+  border-radius:16px; 
+  text-align:center; 
+  cursor:pointer; 
+  transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+  font-weight:600; 
+  color:#6366f1; 
+  max-width:420px; 
+  margin:0 auto;
+  box-shadow:0 4px 12px rgba(99, 102, 241, 0.08);
+}
+.file-label:hover { 
+  background:linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%);
+  border-color:#6366f1; 
+  color:#4f46e5;
+  transform:translateY(-3px);
+  box-shadow:0 8px 20px rgba(99, 102, 241, 0.15);
+}
+#bannerInput:focus + .file-label { 
+  border-color:#6366f1; 
+  box-shadow:0 0 0 4px rgba(99, 102, 241, 0.15);
+}
 
 /* Logo Drag Drop */
-.logo-drag-drop { background:#f9f9f9; border:2px dashed #ddd; border-radius:8px; cursor:pointer; transition:all 0.3s; }
-.logo-drag-drop:hover { background:#f0f0f0; border-color:#c41e3a; }
-.logo-drag-drop.drag-over { background:#ffe6e6; border-color:#c41e3a; }
+.logo-drag-drop { 
+  background:linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+  border:3px dashed #c7d2fe; 
+  border-radius:16px; 
+  cursor:pointer; 
+  transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:0 4px 12px rgba(99, 102, 241, 0.08);
+}
+.logo-drag-drop:hover { 
+  background:linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%);
+  border-color:#6366f1;
+  transform:translateY(-3px);
+  box-shadow:0 8px 20px rgba(99, 102, 241, 0.15);
+}
+.logo-drag-drop.drag-over { 
+  background:linear-gradient(135deg, #ddd6fe 0%, #c7d2fe 100%);
+  border-color:#6366f1;
+  box-shadow:0 8px 20px rgba(99, 102, 241, 0.2);
+}
 
-/* Buttons - BNN Unified Theme */
-.btn { padding:12px 24px; border:none; border-radius:10px; font-size:0.95rem; cursor:pointer; font-weight:600; transition:all 0.3s; width:100%; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-.btn-primary { background:linear-gradient(135deg, #0052b4 0%, #003d82 100%); color:white; border:1px solid #002855; }
-.btn-primary:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,82,180,0.4); }
-.btn-primary:disabled { background:#9ca3af; cursor:not-allowed; opacity:0.6; transform:none; }
-.btn-danger { background:linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; }
-.btn-danger:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(245,87,108,0.3); }
+/* Buttons - Modern Gradient Theme */
+.btn { 
+  padding:14px 28px; 
+  border:none; 
+  border-radius:12px; 
+  font-size:0.95rem; 
+  cursor:pointer; 
+  font-weight:600; 
+  transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+  width:100%; 
+  box-shadow:0 4px 12px rgba(0,0,0,0.12);
+  letter-spacing:0.3px;
+  position:relative;
+  overflow:hidden;
+}
+.btn::before {
+  content:'';
+  position:absolute;
+  top:0;
+  left:-100%;
+  width:100%;
+  height:100%;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition:left 0.5s;
+}
+.btn:hover::before {
+  left:100%;
+}
+.btn-primary { 
+  background:linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); 
+  color:white; 
+  border:none;
+}
+.btn-primary:hover { 
+  transform:translateY(-3px); 
+  box-shadow:0 8px 20px rgba(99, 102, 241, 0.4);
+  background:linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+}
+.btn-primary:active {
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(99, 102, 241, 0.3);
+}
+.btn-primary:disabled { 
+  background:linear-gradient(135deg, #9ca3af 0%, #6b7280 100%); 
+  cursor:not-allowed; 
+  opacity:0.6; 
+  transform:none; 
+}
+.btn-danger { 
+  background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
+  color:white; 
+}
+.btn-danger:hover { 
+  transform:translateY(-3px); 
+  box-shadow:0 8px 20px rgba(239, 68, 68, 0.4);
+  background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
 
 /* Points List */
 .points-list-wrapper { padding:20px; display:flex; flex-direction:column; align-items:center; }
