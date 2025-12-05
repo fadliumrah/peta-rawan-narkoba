@@ -1,7 +1,24 @@
 // Admin UI: upload banner, manual add points, list & delete
 (function(){
-  // Map removed - not needed for this admin panel
-  // Simplified admin without interactive map selection
+  // Initialize mini map for coordinate selection
+  const miniMap = L.map('miniMap').setView([0.9167, 104.4510], 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors &amp; CARTO',
+    subdomains: 'abcd'
+  }).addTo(miniMap);
+  
+  // Fix map size after load
+  setTimeout(() => miniMap.invalidateSize(), 100);
+  
+  // Click handler for coordinate selection
+  let tempMarker;
+  miniMap.on('click', (e) => {
+    if (tempMarker) miniMap.removeLayer(tempMarker);
+    tempMarker = L.marker(e.latlng).addTo(miniMap);
+    document.querySelector('#pointForm [name=lat]').value = e.latlng.lat.toFixed(6);
+    document.querySelector('#pointForm [name=lng]').value = e.latlng.lng.toFixed(6);
+  });
   
   function loadAdminBaseMap(){
     // Map functionality disabled
@@ -48,8 +65,7 @@
     }
     
     gpsBtn.disabled = true;
-    gpsStatus.style.display = 'flex';
-    gpsStatusText.textContent = '📍 Mengakses GPS...';
+    gpsBtn.textContent = '📍 Mengakses GPS...';
     
     navigator.geolocation.getCurrentPosition(
       function(position) {
@@ -61,9 +77,15 @@
         document.querySelector('#pointForm [name=lat]').value = lat.toFixed(6);
         document.querySelector('#pointForm [name=lng]').value = lng.toFixed(6);
         
+        // Update map marker
+        if (tempMarker) miniMap.removeLayer(tempMarker);
+        tempMarker = L.marker([lat, lng]).addTo(miniMap);
+        miniMap.setView([lat, lng], 15);
+        
         // Show success message
         alert(`✅ GPS Berhasil!\nLatitude: ${lat.toFixed(6)}\nLongitude: ${lng.toFixed(6)}\nAkurasi: ±${Math.round(accuracy)}m`);
         gpsBtn.disabled = false;
+        gpsBtn.textContent = '📍 Ambil Koordinat dari GPS Saya';
       },
       function(error) {
         let msg = 'Error mengakses GPS';
@@ -74,6 +96,7 @@
         }
         alert(msg);
         gpsBtn.disabled = false;
+        gpsBtn.textContent = '📍 Ambil Koordinat dari GPS Saya';
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
