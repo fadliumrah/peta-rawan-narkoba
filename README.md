@@ -66,7 +66,39 @@ Aplikasi menggunakan **SQLite** (better-sqlite3) untuk storage:
 - 🟡 **Sedang** - Kuning (#FFC107)
 - 🔴 **Tinggi** - Merah (#F44336)
 
+## 🧪 Testing
+
+Aplikasi dilengkapi dengan unit tests, integration tests, dan UI tests:
+
+```bash
+# Run all tests
+npm test
+
+# Run UI tests (Playwright)
+npm run test:ui
+
+# Run tests with coverage
+npm test -- --coverage
+```
+
+Lihat [TESTING.md](TESTING.md) untuk dokumentasi lengkap tentang testing.
+
+## 🔒 Security
+
+Aplikasi dilengkapi dengan fitur keamanan:
+- HTTP Security Headers (Helmet)
+- Rate Limiting (API, Auth, Upload)
+- Input Validation & Sanitization
+- XSS Protection
+- SQL Injection Protection (Prepared Statements)
+- CORS Configuration
+- Gzip Compression
+
+Lihat [SECURITY.md](SECURITY.md) untuk dokumentasi lengkap tentang keamanan.
+
 ## 📝 Notes
 - Change admin credentials sebelum deploy (gunakan environment variables)
 - Database di-backup otomatis saat push ke Railway
 - Kelurahan boundaries sudah dihapus, fokus pada category-based risk levels
+- All tests passing (68 unit/integration tests)
+- Comprehensive security measures implemented
