@@ -9,14 +9,14 @@
     subdomains: 'abcd'
   }).addTo(map);
 
-  // Load banner caption only (image loaded directly from file like logo)
+  // Load banner caption from database
   fetch('/api/banner?t=' + Date.now()).then(r=>r.json()).then(b=>{
     const bannerCaption = document.getElementById('bannerCaption');
     if (b && b.caption) {
       bannerCaption.textContent = b.caption;
     }
   }).catch(err => {
-    console.log('Banner caption not loaded:', err);
+    console.error('Failed to load banner caption:', err);
   });
 
   // Kelurahan data with predefined colors (18 kelurahan)

@@ -205,13 +205,14 @@
   // Load existing banner from database
   async function loadBanner() {
     try {
+      // Load banner image with cache-busting
+      bannerPreview.src = '/api/banner/image?t=' + Date.now();
+      bannerPreview.style.display = 'block';
+      bannerPlaceholder.style.display = 'none';
+      
+      // Load banner caption
       const res = await fetch('/api/banner');
       const data = await res.json();
-      if (data && data.url) {
-        bannerPreview.src = data.url;
-        bannerPreview.style.display = 'block';
-        bannerPlaceholder.style.display = 'none';
-      }
       if (data && data.caption) {
         bannerCaptionInput.value = data.caption;
       }
@@ -246,25 +247,35 @@
     ev.preventDefault();
     const file = fileInput.files[0];
     const caption = bannerCaptionInput.value || '';
-    if (!file) {
-      alert('Pilih file banner terlebih dahulu');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = async function(){
-      const dataUrl = reader.result;
-      const payload = { filename: file.name, data: dataUrl, caption };
+    
+    // If file is provided, upload both image and caption
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async function(){
+        const dataUrl = reader.result;
+        const payload = { data: dataUrl, caption };
+        const res = await fetch('/api/banner', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) { 
+          alert('✅ Banner berhasil diupdate'); 
+          loadBanner(); // Reload banner
+          fileName.style.display = 'none';
+          fileInput.value = '';
+        } else { 
+          alert('❌ Upload gagal'); 
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // If no file, only update caption
+      const payload = { caption };
       const res = await fetch('/api/banner', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
       if (res.ok) { 
-        alert('✅ Banner berhasil diupdate'); 
+        alert('✅ Caption banner berhasil diupdate'); 
         loadBanner(); // Reload banner
-        fileName.style.display = 'none';
-        fileInput.value = '';
       } else { 
-        alert('❌ Upload gagal'); 
+        alert('❌ Update gagal'); 
       }
-    };
-    reader.readAsDataURL(file);
+    }
   });
 
   // points listing with empty state

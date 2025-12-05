@@ -14,7 +14,7 @@
   <nav class="top-nav">
     <div class="nav-container">
       <div class="nav-logo-section">
-        <img class="nav-logo" src="/logo-bnn.png" id="logoImg" alt="Logo BNN" />
+        <img class="nav-logo" src="/api/logo/image" id="logoImg" alt="Logo BNN" />
         <div class="nav-text">
           <h1 class="nav-title">Peta Rawan Narkoba</h1>
           <p class="nav-subtitle">BNN Kota Tanjungpinang</p>
@@ -25,7 +25,7 @@
 
   <header class="banner-header">
     <div class="banner-container">
-      <img id="bannerImg" class="banner-img" src="/banner-bnn.svg" alt="Banner BNN" />
+      <img id="bannerImg" class="banner-img" src="/api/banner/image" alt="Banner BNN" />
       <div id="bannerCaption" class="caption">Informasi Area Rawan Narkoba - Kota Tanjungpinang</div>
     </div>
   </header>
@@ -66,9 +66,9 @@
   </div>
 
   <script>
-    // Force reload logo and banner with cache-busting timestamp (like logo treatment)
-    document.getElementById('logoImg').src = '/logo-bnn.png?t=' + Date.now();
-    document.getElementById('bannerImg').src = '/banner-bnn.svg?t=' + Date.now();
+    // Force reload logo and banner with cache-busting timestamp from database
+    document.getElementById('logoImg').src = '/api/logo/image?t=' + Date.now();
+    document.getElementById('bannerImg').src = '/api/banner/image?t=' + Date.now();
   </script>
 
   <footer class="footer">

@@ -133,13 +133,28 @@ app.patch('/api/points/:id', basicAuth, (req, res) => {
   }
 });
 
-// API: banner get
+// API: Get banner image as BLOB
+app.get('/api/banner/image', (req, res) => {
+  try {
+    const banner = db.getBanner();
+    if (!banner || !banner.image_data) {
+      return res.status(404).send('Banner not found');
+    }
+    res.set('Content-Type', banner.mime_type || 'image/svg+xml');
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(banner.image_data);
+  } catch (err) {
+    console.error('Error serving banner:', err);
+    res.status(500).send('Failed to serve banner');
+  }
+});
+
+// API: Get banner caption
 app.get('/api/banner', (req, res) => {
   try {
     const banner = db.getBanner();
     res.json({ 
-      url: banner.image_data || null, 
-      caption: banner.caption || 'Informasi Area Rawan Narkoba - Kota Tanjungpinang'
+      caption: banner?.caption || 'Informasi Area Rawan Narkoba - Kota Tanjungpinang'
     });
   } catch (err) {
     console.error('Error fetching banner:', err);
@@ -147,73 +162,69 @@ app.get('/api/banner', (req, res) => {
   }
 });
 
-// API: banner upload
+// API: Upload banner as BLOB to database
 app.post('/api/banner', basicAuth, (req, res) => {
   try {
     const caption = req.body.caption || 'Informasi Area Rawan Narkoba - Kota Tanjungpinang';
-    const data = req.body.data; // base64 string with data:... prefix
-    if (!data) return res.status(400).json({ error: 'data (base64) required' });
+    const data = req.body.data; // base64 string with data:... prefix (optional)
     
-    // Save banner as physical file (like logo) for permanence
-    try {
-      // Extract base64 data and file extension
-      const match = data.match(/^data:image\/(\w+);base64,(.*)$/);
-      const ext = match ? match[1] : 'png';
-      const b64 = match ? match[2] : data;
-      const buffer = Buffer.from(b64, 'base64');
-      
-      // Save to public directory as banner-bnn.{ext}
-      const bannerFilename = `banner-bnn.${ext}`;
-      const bannerPath = path.join(PUBLIC_DIR, bannerFilename);
-      fs.writeFileSync(bannerPath, buffer);
-      console.log('✅ Banner saved to physical file:', bannerPath);
-      
-      // Also update database with file URL instead of base64
-      const fileUrl = `/${bannerFilename}`;
-      db.updateBanner(fileUrl, caption);
-      
-      // Backup banner info to JSON
-      const bannerBackup = { 
-        filename: bannerFilename, 
-        caption: caption,
-        updated_at: new Date().toISOString()
-      };
-      fs.writeFileSync(path.join(__dirname, 'banner-backup.json'), JSON.stringify(bannerBackup, null, 2));
-      console.log('✅ Banner metadata backed up to banner-backup.json');
-      
-      res.json({ ok: true, caption, filename: bannerFilename });
-    } catch (saveErr) {
-      console.error('Failed to save banner as file:', saveErr);
-      // Fallback to old method
-      db.updateBanner(data, caption);
-      res.json({ ok: true, caption });
+    // If no image data provided, only update caption
+    if (!data) {
+      db.updateBanner(null, null, caption);
+      console.log('✅ Banner caption updated');
+      return res.json({ ok: true, caption });
     }
+    
+    // Extract base64 data and mime type
+    const match = data.match(/^data:(image\/\w+);base64,(.*)$/);
+    const mimeType = match ? match[1] : 'image/png';
+    const b64 = match ? match[2] : data;
+    const buffer = Buffer.from(b64, 'base64');
+    
+    // Save to database as BLOB
+    db.updateBanner(buffer, mimeType, caption);
+    console.log('✅ Banner saved to database as BLOB');
+    
+    res.json({ ok: true, caption });
   } catch (err) {
     console.error('Error uploading banner:', err);
     res.status(500).json({ error: 'Failed to upload banner' });
   }
 });
 
-// API: logo upload
-// Logo upload via JSON { filename, data: base64... }
+// API: Get logo image as BLOB
+app.get('/api/logo/image', (req, res) => {
+  try {
+    const logo = db.getLogo();
+    if (!logo || !logo.image_data) {
+      return res.status(404).send('Logo not found');
+    }
+    res.set('Content-Type', logo.mime_type || 'image/png');
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(logo.image_data);
+  } catch (err) {
+    console.error('Error serving logo:', err);
+    res.status(500).send('Failed to serve logo');
+  }
+});
+
+// API: Upload logo as BLOB to database
 app.post('/api/logo', basicAuth, (req, res) => {
   try {
-    const filename = req.body.filename || 'logo.svg';
     const data = req.body.data; // base64 string possibly with data:... prefix
     if (!data) return res.status(400).json({ error: 'data (base64) required' });
-    // strip prefix
-    const m = data.match(/^data:.*;base64,(.*)$/);
-    const b64 = m ? m[1] : data;
+    
+    // Extract base64 data and mime type
+    const match = data.match(/^data:(image\/\w+);base64,(.*)$/);
+    const mimeType = match ? match[1] : 'image/png';
+    const b64 = match ? match[2] : data;
     const buffer = Buffer.from(b64, 'base64');
-    const outName = 'logo-bnn' + path.extname(filename);
-    const outPath = path.join(PUBLIC_DIR, outName);
     
-    // Ensure public directory exists
-    if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+    // Save to database as BLOB
+    db.updateLogo(buffer, mimeType);
+    console.log('✅ Logo saved to database as BLOB');
     
-    fs.writeFileSync(outPath, buffer);
-    console.log('Logo uploaded to:', outPath);
-    res.json({ ok: true, filename: outName });
+    res.json({ ok: true });
   } catch (err) {
     console.error('Logo upload error:', err);
     res.status(500).json({ error: 'Upload failed: ' + err.message });
@@ -230,6 +241,22 @@ app.get('/api/news', (req, res) => {
   } catch (err) {
     console.error('Error fetching news:', err);
     res.status(500).json({ error: 'Failed to fetch news' });
+  }
+});
+
+// Get news image as BLOB
+app.get('/api/news/:id/image', (req, res) => {
+  try {
+    const news = db.getNewsById(req.params.id);
+    if (!news || !news.image_data) {
+      return res.status(404).send('Image not found');
+    }
+    res.set('Content-Type', news.mime_type || 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(news.image_data);
+  } catch (err) {
+    console.error('Error serving news image:', err);
+    res.status(500).send('Failed to serve image');
   }
 });
 
@@ -269,19 +296,19 @@ app.post('/api/news', basicAuth, (req, res) => {
     if (!title || !content || !author) {
       return res.status(400).json({ error: 'Title, content, and author are required' });
     }
-    const result = db.createNews(title, content, image_data || null, author);
     
-    // Backup news to JSON file for persistence across redeploys
-    try {
-      const allNews = db.getAllNews();
-      fs.writeFileSync(
-        path.join(__dirname, 'data', 'news-backup.json'), 
-        JSON.stringify(allNews, null, 2)
-      );
-      console.log('✅ News backed up to news-backup.json');
-    } catch (backupErr) {
-      console.warn('⚠️ Failed to backup news:', backupErr.message);
+    // Convert base64 image to BLOB if provided
+    let imageBuffer = null;
+    let mimeType = null;
+    if (image_data) {
+      const match = image_data.match(/^data:(image\/\w+);base64,(.*)$/);
+      mimeType = match ? match[1] : 'image/jpeg';
+      const b64 = match ? match[2] : image_data;
+      imageBuffer = Buffer.from(b64, 'base64');
     }
+    
+    const result = db.createNews(title, content, imageBuffer, mimeType, author);
+    console.log('✅ News saved to database with BLOB image');
     
     res.json({ ok: true, id: result.lastInsertRowid });
   } catch (err) {
@@ -297,19 +324,19 @@ app.put('/api/news/:id', basicAuth, (req, res) => {
     if (!title || !content || !author) {
       return res.status(400).json({ error: 'Title, content, and author are required' });
     }
-    db.updateNews(req.params.id, title, content, image_data || null, author);
     
-    // Backup news after update
-    try {
-      const allNews = db.getAllNews();
-      fs.writeFileSync(
-        path.join(__dirname, 'data', 'news-backup.json'), 
-        JSON.stringify(allNews, null, 2)
-      );
-      console.log('✅ News backup updated after edit');
-    } catch (backupErr) {
-      console.warn('⚠️ Failed to update news backup:', backupErr.message);
+    // Convert base64 image to BLOB if provided
+    let imageBuffer = null;
+    let mimeType = null;
+    if (image_data) {
+      const match = image_data.match(/^data:(image\/\w+);base64,(.*)$/);
+      mimeType = match ? match[1] : 'image/jpeg';
+      const b64 = match ? match[2] : image_data;
+      imageBuffer = Buffer.from(b64, 'base64');
     }
+    
+    db.updateNews(req.params.id, title, content, imageBuffer, mimeType, author);
+    console.log('✅ News updated in database with BLOB image');
     
     res.json({ ok: true });
   } catch (err) {
@@ -322,19 +349,7 @@ app.put('/api/news/:id', basicAuth, (req, res) => {
 app.delete('/api/news/:id', basicAuth, (req, res) => {
   try {
     db.deleteNews(req.params.id);
-    
-    // Update backup after deletion
-    try {
-      const allNews = db.getAllNews();
-      fs.writeFileSync(
-        path.join(__dirname, 'data', 'news-backup.json'), 
-        JSON.stringify(allNews, null, 2)
-      );
-      console.log('✅ News backup updated after deletion');
-    } catch (backupErr) {
-      console.warn('⚠️ Failed to update news backup:', backupErr.message);
-    }
-    
+    console.log('✅ News deleted from database');
     res.json({ ok: true });
   } catch (err) {
     console.error('Error deleting news:', err);

@@ -35,32 +35,35 @@ function initializeDatabase() {
     )
   `);
 
-  // Create banner table
+  // Create banner table with BLOB storage
   db.exec(`
     CREATE TABLE IF NOT EXISTS banner (
       id INTEGER PRIMARY KEY CHECK(id = 1),
-      image_data TEXT,
+      image_data BLOB,
+      mime_type TEXT,
       caption TEXT,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
-  // Create logo table
+  // Create logo table with BLOB storage
   db.exec(`
     CREATE TABLE IF NOT EXISTS logo (
       id INTEGER PRIMARY KEY CHECK(id = 1),
-      image_data TEXT,
+      image_data BLOB,
+      mime_type TEXT,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
-  // Create news table
+  // Create news table with BLOB storage for images
   db.exec(`
     CREATE TABLE IF NOT EXISTS news (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       content TEXT NOT NULL,
-      image_data TEXT,
+      image_data BLOB,
+      mime_type TEXT,
       author TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -115,24 +118,7 @@ function migrateExistingData() {
     }
   }
 
-  // Migrate banner
-  if (fs.existsSync(bannerFile)) {
-    try {
-      const bannerData = JSON.parse(fs.readFileSync(bannerFile, 'utf-8'));
-      const existingBanner = db.prepare('SELECT COUNT(*) as count FROM banner').get();
-      
-      if (existingBanner.count === 0) {
-        db.prepare(`
-          INSERT INTO banner (id, image_data, caption)
-          VALUES (1, ?, ?)
-        `).run(bannerData.dataUrl || null, bannerData.caption || null);
-        
-        console.log('✅ Migrated banner from JSON');
-      }
-    } catch (err) {
-      console.log('⚠️ No existing banner data to migrate:', err.message);
-    }
-  }
+  // Banner migration removed - now loaded directly from file in seedSampleData()
 }
 
 // Run migration
@@ -168,49 +154,57 @@ function seedSampleData() {
     console.log(`✅ Added ${samplePoints.length} sample points`);
   }
   
-  // Ensure banner has default caption and placeholder image
+  // Load banner as BLOB from physical file
   const bannerCount = db.prepare('SELECT COUNT(*) as count FROM banner').get();
   if (bannerCount.count === 0) {
-    let bannerData = null;
+    let bannerBuffer = null;
+    let bannerMimeType = 'image/svg+xml';
     let bannerCaption = 'Informasi Area Rawan Narkoba - Kota Tanjungpinang';
     
-    // Try to load banner from physical file first (like logo system)
+    // Load banner from physical file as BLOB
     try {
+      const bannerFilePath = path.join(__dirname, 'public', 'banner-bnn.svg');
+      if (fs.existsSync(bannerFilePath)) {
+        bannerBuffer = fs.readFileSync(bannerFilePath);
+        bannerMimeType = 'image/svg+xml';
+        console.log('✅ Loaded banner from file as BLOB:', bannerFilePath);
+      }
+      
+      // Load caption from backup
       const backupPath = path.join(__dirname, 'banner-backup.json');
       if (fs.existsSync(backupPath)) {
         const backup = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
-        
-        // Check if banner file exists in public directory
-        if (backup.filename) {
-          const bannerFilePath = path.join(__dirname, 'public', backup.filename);
-          if (fs.existsSync(bannerFilePath)) {
-            bannerData = `/${backup.filename}`;
-            bannerCaption = backup.caption || bannerCaption;
-            console.log('✅ Loaded banner from physical file:', backup.filename);
-          }
-        }
-        // Fallback to old base64 format if exists
-        else if (backup.image_data) {
-          bannerData = backup.image_data;
-          bannerCaption = backup.caption || bannerCaption;
-          console.log('✅ Loaded banner from backup (base64 format)');
-        }
+        bannerCaption = backup.caption || bannerCaption;
       }
-    } catch (backupErr) {
-      console.warn('⚠️ Could not load banner backup:', backupErr.message);
+    } catch (err) {
+      console.warn('⚠️ Could not load banner file:', err.message);
     }
     
-    // Fallback to placeholder banner if no backup exists
-    if (!bannerData) {
-      bannerData = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwMCIgaGVpZ2h0PSI0MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMWUzYThhO3N0b3Atb3BhY2l0eToxIiAvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzNiODJmNjtzdG9wLW9wYWNpdHk6MSIgLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTIwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZ3JhZCkiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjQ4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkJOTiBLb3RhIFRhbmp1bmdwaW5hbmc8L3RleHQ+PC9zdmc+';
-      console.log('✅ Using default placeholder banner');
+    if (bannerBuffer) {
+      db.prepare(`
+        INSERT INTO banner (id, image_data, mime_type, caption)
+        VALUES (1, ?, ?, ?)
+      `).run(bannerBuffer, bannerMimeType, bannerCaption);
+      console.log('✅ Added banner BLOB to database');
     }
-    
-    db.prepare(`
-      INSERT INTO banner (id, image_data, caption)
-      VALUES (1, ?, ?)
-    `).run(bannerData, bannerCaption);
-    console.log('✅ Added banner to database');
+  }
+  
+  // Load logo as BLOB from physical file
+  const logoCount = db.prepare('SELECT COUNT(*) as count FROM logo').get();
+  if (logoCount.count === 0) {
+    try {
+      const logoFilePath = path.join(__dirname, 'public', 'logo-bnn.png');
+      if (fs.existsSync(logoFilePath)) {
+        const logoBuffer = fs.readFileSync(logoFilePath);
+        db.prepare(`
+          INSERT INTO logo (id, image_data, mime_type)
+          VALUES (1, ?, ?)
+        `).run(logoBuffer, 'image/png');
+        console.log('✅ Loaded logo from file as BLOB:', logoFilePath);
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not load logo file:', err.message);
+    }
   }
   
   // Restore news from backup if table is empty
@@ -288,27 +282,30 @@ module.exports = {
   
   // Banner operations
   getBanner: () => {
-    let banner = db.prepare('SELECT * FROM banner WHERE id = 1').get();
-    if (!banner) {
-      // Insert default banner if not exists
-      db.prepare(`
-        INSERT INTO banner (id, image_data, caption)
-        VALUES (1, NULL, 'Informasi Area Rawan Narkoba - Kota Tanjungpinang')
-      `).run();
-      banner = db.prepare('SELECT * FROM banner WHERE id = 1').get();
-    }
-    return banner;
+    return db.prepare('SELECT * FROM banner WHERE id = 1').get();
   },
   
-  updateBanner: (imageData, caption) => {
-    return db.prepare(`
-      INSERT INTO banner (id, image_data, caption, updated_at)
-      VALUES (1, ?, ?, CURRENT_TIMESTAMP)
-      ON CONFLICT(id) DO UPDATE SET
-        image_data = excluded.image_data,
-        caption = excluded.caption,
-        updated_at = CURRENT_TIMESTAMP
-    `).run(imageData, caption);
+  updateBanner: (imageBuffer, mimeType, caption) => {
+    // If no new image provided, only update caption
+    if (imageBuffer === null || imageBuffer === undefined) {
+      return db.prepare(`
+        INSERT INTO banner (id, caption, updated_at)
+        VALUES (1, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(id) DO UPDATE SET
+          caption = excluded.caption,
+          updated_at = CURRENT_TIMESTAMP
+      `).run(caption);
+    } else {
+      return db.prepare(`
+        INSERT INTO banner (id, image_data, mime_type, caption, updated_at)
+        VALUES (1, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(id) DO UPDATE SET
+          image_data = excluded.image_data,
+          mime_type = excluded.mime_type,
+          caption = excluded.caption,
+          updated_at = CURRENT_TIMESTAMP
+      `).run(imageBuffer, mimeType, caption);
+    }
   },
   
   // Logo operations
@@ -316,14 +313,15 @@ module.exports = {
     return db.prepare('SELECT * FROM logo WHERE id = 1').get();
   },
   
-  updateLogo: (imageData) => {
+  updateLogo: (imageBuffer, mimeType) => {
     return db.prepare(`
-      INSERT INTO logo (id, image_data, updated_at)
-      VALUES (1, ?, CURRENT_TIMESTAMP)
+      INSERT INTO logo (id, image_data, mime_type, updated_at)
+      VALUES (1, ?, ?, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         image_data = excluded.image_data,
+        mime_type = excluded.mime_type,
         updated_at = CURRENT_TIMESTAMP
-    `).run(imageData);
+    `).run(imageBuffer, mimeType);
   },
 
   // News operations
@@ -344,20 +342,30 @@ module.exports = {
     `).all(searchPattern, searchPattern, searchPattern);
   },
 
-  createNews: (title, content, imageData, author) => {
+  createNews: (title, content, imageBuffer, mimeType, author) => {
     return db.prepare(`
-      INSERT INTO news (title, content, image_data, author)
-      VALUES (?, ?, ?, ?)
-    `).run(title, content, imageData, author);
+      INSERT INTO news (title, content, image_data, mime_type, author)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(title, content, imageBuffer, mimeType, author);
   },
 
-  updateNews: (id, title, content, imageData, author) => {
-    return db.prepare(`
-      UPDATE news 
-      SET title = ?, content = ?, image_data = ?, author = ?,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(title, content, imageData, author, id);
+  updateNews: (id, title, content, imageBuffer, mimeType, author) => {
+    // If no new image provided, only update text fields
+    if (imageBuffer === null || imageBuffer === undefined) {
+      return db.prepare(`
+        UPDATE news 
+        SET title = ?, content = ?, author = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(title, content, author, id);
+    } else {
+      return db.prepare(`
+        UPDATE news 
+        SET title = ?, content = ?, image_data = ?, mime_type = ?, author = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(title, content, imageBuffer, mimeType, author, id);
+    }
   },
 
   deleteNews: (id) => {
