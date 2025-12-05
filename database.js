@@ -120,6 +120,50 @@ function migrateExistingData() {
 // Run migration
 migrateExistingData();
 
+// Add sample data if database is empty (for first deployment)
+function seedSampleData() {
+  const pointsCount = db.prepare('SELECT COUNT(*) as count FROM points').get();
+  
+  if (pointsCount.count === 0) {
+    console.log('📊 Adding sample data...');
+    
+    const samplePoints = [
+      { name: 'Batu IX', lat: 0.9167, lng: 104.4510, category: 'sedang', description: 'Area pemantauan kerawanan narkoba' },
+      { name: 'Dompak', lat: 0.9300, lng: 104.4200, category: 'sedang', description: 'Wilayah pengawasan khusus' },
+      { name: 'Kampung Bugis', lat: 0.9100, lng: 104.4600, category: 'sedang', description: 'Lokasi monitoring rutin' },
+      { name: 'Sei Jang', lat: 0.9400, lng: 104.4400, category: 'sedang', description: 'Area perhatian khusus' },
+      { name: 'Bukit Cermin', lat: 0.9200, lng: 104.4300, category: 'sedang', description: 'Zona pengawasan intensif' }
+    ];
+    
+    const insertPoint = db.prepare(`
+      INSERT INTO points (name, lat, lng, category, description)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    
+    const insertMany = db.transaction((points) => {
+      for (const point of points) {
+        insertPoint.run(point.name, point.lat, point.lng, point.category, point.description);
+      }
+    });
+    
+    insertMany(samplePoints);
+    console.log(`✅ Added ${samplePoints.length} sample points`);
+  }
+  
+  // Ensure banner has default caption
+  const bannerCount = db.prepare('SELECT COUNT(*) as count FROM banner').get();
+  if (bannerCount.count === 0) {
+    db.prepare(`
+      INSERT INTO banner (id, image_data, caption)
+      VALUES (1, NULL, ?)
+    `).run('Informasi Area Rawan Narkoba - Kota Tanjungpinang');
+    console.log('✅ Added default banner caption');
+  }
+}
+
+// Seed sample data
+seedSampleData();
+
 // Export database instance and helper functions
 module.exports = {
   db,
