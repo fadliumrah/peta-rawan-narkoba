@@ -30,12 +30,33 @@
     if (caption) caption.textContent = 'Informasi Area Rawan Narkoba - Kota Tanjungpinang';
   });
 
-  // Color mapping for markers based on category
-  const categoryMap = {
-    rendah: { color: '#4CAF50', emoji: '🟢' },
-    sedang: { color: '#FFC107', emoji: '🟡' },
-    tinggi: { color: '#F44336', emoji: '🔴' }
-  };
+  // Kelurahan data with predefined colors (18 kelurahan)
+  const kelurahanList = [
+    { "name": "Dompak", "color": "#1f78b4" },
+    { "name": "Sei Jang", "color": "#33a02c" },
+    { "name": "Tanjung Ayun Sakti", "color": "#e31a1c" },
+    { "name": "Tanjungpinang Timur", "color": "#ff7f00" },
+    { "name": "Tanjung Unggat", "color": "#6a3d9a" },
+    { "name": "Bukit Cermin", "color": "#b15928" },
+    { "name": "Kampung Baru", "color": "#a6cee3" },
+    { "name": "Kemboja", "color": "#b2df8a" },
+    { "name": "Tanjungpinang Barat", "color": "#fb9a99" },
+    { "name": "Kampung Bugis", "color": "#fdbf6f" },
+    { "name": "Penyengat", "color": "#cab2d6" },
+    { "name": "Senggarang", "color": "#ffff99" },
+    { "name": "Tanjungpinang Kota", "color": "#8dd3c7" },
+    { "name": "Air Raja", "color": "#e41a1c" },
+    { "name": "Batu IX", "color": "#377eb8" },
+    { "name": "Kampung Bulang", "color": "#4daf4a" },
+    { "name": "Melayu Kota Piring", "color": "#984ea3" },
+    { "name": "Pinang Kencana", "color": "#ff7f00" }
+  ];
+
+  // Create kelurahan color map for quick lookup
+  const kelurahanColorMap = {};
+  kelurahanList.forEach(k => {
+    kelurahanColorMap[k.name] = k.color;
+  });
 
   const legend = L.control({ position: 'bottomright' });
   let legendDiv;
@@ -55,13 +76,25 @@
     header.innerHTML = '<span style="font-size:0.9rem; font-weight:700;">📍 Legenda Kelurahan</span><span id="legend-toggle" style="float:right; font-size:0.8rem; color:#666;">▼</span>';
     div.appendChild(header);
     
-    // Content container (will be populated with kelurahan names)
+    // Content container with all 18 kelurahan
     legendContent = document.createElement('div');
     legendContent.className = 'legend-content';
     legendContent.style.padding = '8px 10px';
-    legendContent.style.maxHeight = '250px';
+    legendContent.style.maxHeight = '300px';
     legendContent.style.overflowY = 'auto';
-    legendContent.innerHTML = '<div style="color:#999; font-size:0.75rem; text-align:center; padding:8px;">Memuat data...</div>';
+    
+    // Build legend HTML with all kelurahan
+    let html = '';
+    kelurahanList.forEach(k => {
+      html += `
+        <div style="margin:4px 0; font-size:0.75rem; display:flex; align-items:center; gap:6px;">
+          <span style="width:14px; height:14px; background:${k.color}; border-radius:2px; flex-shrink:0; border:1px solid rgba(0,0,0,0.1);"></span>
+          <span style="flex:1; font-size:0.75rem;" data-kelurahan="${k.name}">${k.name}</span>
+          <span style="background:#f0f0f0; padding:1px 5px; border-radius:8px; font-size:0.7rem; min-width:18px; text-align:center;" data-count="${k.name}">0</span>
+        </div>
+      `;
+    });
+    legendContent.innerHTML = html;
     
     div.appendChild(legendContent);
     
@@ -91,76 +124,58 @@
     div.style.background = 'white';
     div.style.borderRadius = '6px';
     div.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
-    div.style.maxWidth = '200px';
+    div.style.maxWidth = '220px';
     div.style.fontSize = '0.8rem';
     legendDiv = div;
     return div;
   };
   
-  legend.updateKelurahan = function(points){
+  legend.updateCounts = function(counts){
     if (!legendContent) return;
     
-    if (!points || points.length === 0) {
-      legendContent.innerHTML = '<div style="color:#999; font-size:0.75rem; text-align:center; padding:8px;">Belum ada data</div>';
-      return;
-    }
-    
-    // Group by kelurahan name
-    const kelurahanMap = {};
-    points.forEach(p => {
-      const name = p.name || 'Tidak Diketahui';
-      if (!kelurahanMap[name]) {
-        kelurahanMap[name] = {
-          count: 0,
-          category: p.category || 'sedang'
-        };
-      }
-      kelurahanMap[name].count++;
+    // Reset all counts to 0
+    kelurahanList.forEach(k => {
+      const el = legendContent.querySelector(`[data-count="${k.name}"]`);
+      if (el) el.textContent = '0';
     });
     
-    // Sort by name
-    const sortedNames = Object.keys(kelurahanMap).sort();
-    
-    // Build legend HTML
-    let html = '';
-    sortedNames.forEach(name => {
-      const data = kelurahanMap[name];
-      const catInfo = categoryMap[data.category] || categoryMap.sedang;
-      html += `
-        <div style="margin:4px 0; font-size:0.75rem; display:flex; align-items:center; gap:4px;">
-          <span style="width:8px; height:8px; background:${catInfo.color}; border-radius:50%; flex-shrink:0;"></span>
-          <span style="flex:1; font-size:0.75rem;">${name}</span>
-        </div>
-      `;
+    // Update counts from data
+    Object.keys(counts || {}).forEach(name => {
+      const el = legendContent.querySelector(`[data-count="${name}"]`);
+      if (el) el.textContent = String(counts[name] || 0);
     });
-    
-    legendContent.innerHTML = html;
   };
   
   legend.addTo(map);
 
-  // Load points with category-based colors
+  // Load points with kelurahan-based colors
   let markersLayer = L.layerGroup().addTo(map);
   
   function loadPoints(){
     fetch('/api/points').then(r=>r.json()).then(points=>{
       markersLayer.clearLayers();
       
+      // Count points per kelurahan
+      const counts = {};
+      
       points.forEach(p=>{
-        const category = p.category || 'sedang';
-        const catInfo = categoryMap[category] || categoryMap.sedang;
+        const kelurahanName = p.name || 'Tidak Diketahui';
+        counts[kelurahanName] = (counts[kelurahanName] || 0) + 1;
+        
+        // Get color from kelurahan map, default to gray if not found
+        const markerColor = kelurahanColorMap[kelurahanName] || '#999999';
         
         const m = L.circleMarker([p.lat, p.lng], {
           radius: 10,
           color: '#ffffff',
           weight: 2,
-          fillColor: catInfo.color,
-          fillOpacity: 0.95
+          fillColor: markerColor,
+          fillOpacity: 0.9
         }).addTo(markersLayer);
         
         const popupContent = `
           <div style="min-width:200px;">
-            <h3 style="margin:0 0 8px 0; font-size:1rem;">${p.name || 'Lokasi Rawan'}</h3>
+            <h3 style="margin:0 0 8px 0; font-size:1rem;">${kelurahanName}</h3>
             <div style="margin-bottom:6px;">
               <strong>📍 Koordinat:</strong><br/>
               ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}
@@ -172,11 +187,11 @@
           </div>
         `;
         m.bindPopup(popupContent);
-        m.bindTooltip(p.name || 'Lokasi Rawan', {direction:'top', offset:[0,-8]});
+        m.bindTooltip(kelurahanName, {direction:'top', offset:[0,-8]});
       });
       
-      // Update legend with kelurahan names
-      legend.updateKelurahan(points);
+      // Update legend counts
+      legend.updateCounts(counts);
       
       // Fit bounds if there are points
       if(points.length) {
