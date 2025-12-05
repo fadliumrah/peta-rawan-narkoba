@@ -85,7 +85,14 @@ app.post('/api/points', basicAuth, (req, res) => {
       return res.status(400).json({ error: 'category must be rendah, sedang, or tinggi' });
     }
     
-    const id = db.createPoint(name, Number(lat), Number(lng), category, description || null);
+    // Validate coordinates
+    const numLat = Number(lat);
+    const numLng = Number(lng);
+    if (isNaN(numLat) || isNaN(numLng) || numLat < -90 || numLat > 90 || numLng < -180 || numLng > 180) {
+      return res.status(400).json({ error: 'Invalid coordinates' });
+    }
+    
+    const id = db.createPoint(name, numLat, numLng, category, description || null);
     const point = db.getPointById(id);
     res.json(point);
   } catch (err) {
@@ -141,7 +148,8 @@ app.get('/api/banner/image', (req, res) => {
       return res.status(404).send('Banner not found');
     }
     res.set('Content-Type', banner.mime_type || 'image/svg+xml');
-    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Cache-Control', 'public, max-age=86400, immutable');
+    res.set('ETag', `"banner-${banner.updated_at}"`);
     res.send(banner.image_data);
   } catch (err) {
     console.error('Error serving banner:', err);
@@ -200,7 +208,8 @@ app.get('/api/logo/image', (req, res) => {
       return res.status(404).send('Logo not found');
     }
     res.set('Content-Type', logo.mime_type || 'image/png');
-    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Cache-Control', 'public, max-age=86400, immutable');
+    res.set('ETag', `"logo-${logo.updated_at}"`);
     res.send(logo.image_data);
   } catch (err) {
     console.error('Error serving logo:', err);
@@ -252,7 +261,8 @@ app.get('/api/news/:id/image', (req, res) => {
       return res.status(404).send('Image not found');
     }
     res.set('Content-Type', news.mime_type || 'image/jpeg');
-    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Cache-Control', 'public, max-age=86400, immutable');
+    res.set('ETag', `"news-${news.id}-${news.updated_at}"`);
     res.send(news.image_data);
   } catch (err) {
     console.error('Error serving news image:', err);

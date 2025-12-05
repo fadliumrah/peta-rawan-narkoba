@@ -142,6 +142,11 @@
   
   function loadPoints(){
     fetch('/api/points').then(r=>r.json()).then(points=>{
+      // Efficiently clear all markers
+      markersLayer.eachLayer(layer => {
+        layer.closePopup();
+        layer.closeTooltip();
+      });
       markersLayer.clearLayers();
       
       // Count points per kelurahan
