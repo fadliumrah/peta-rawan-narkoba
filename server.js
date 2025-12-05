@@ -1,7 +1,21 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const cors = require('cors');
+const compression = require('compression');
+const morgan = require('morgan');
 const db = require('./database');
+const { basicAuth, adminProtection } = require('./middleware/security');
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const { 
+  validatePoint, 
+  validateBanner, 
+  validateNews, 
+  validateId,
+  validateSearchQuery 
+} = require('./middleware/validation');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,42 +24,64 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 const UPLOADS_DIR = path.join(PUBLIC_DIR, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdn.jsdelivr.net"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://maps.googleapis.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      connectSrc: ["'self'", "https://nominatim.openstreetmap.org", "https://*.tile.openstreetmap.org", "https://*.basemaps.cartocdn.com"],
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'self'"]
+    }
+  },
+  crossOriginEmbedderPolicy: false
+}));
+
+// Enable CORS with configuration
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+  credentials: true
+}));
+
+// Enable compression
+app.use(compression());
+
+// Logging middleware
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan('combined'));
+}
+
+// Rate limiting for API endpoints
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Stricter rate limiting for admin endpoints
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // Limit each IP to 50 requests per windowMs
+  message: 'Too many admin requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+app.use('/api/', apiLimiter);
+
+// Body parsing middleware with size limits
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Basic Admin credentials (change via env vars)
-const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS = process.env.ADMIN_PASS || 'password';
-
-function basicAuth(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth) {
-    res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
-    return res.status(401).send('Authentication required');
-  }
-  const parts = auth.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Basic') {
-    res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
-    return res.status(401).send('Authentication required');
-  }
-  const credentials = Buffer.from(parts[1], 'base64').toString();
-  const idx = credentials.indexOf(':');
-  if (idx === -1) return res.status(401).send('Authentication required');
-  const user = credentials.slice(0, idx);
-  const pass = credentials.slice(idx + 1);
-  if (user === ADMIN_USER && pass === ADMIN_PASS) return next();
-  res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
-  return res.status(401).send('Authentication required');
-}
-
 // Protect admin routes with Basic Auth
-app.use((req, res, next) => {
-  const p = req.path || '';
-  if (p === '/admin.html' || p === '/admin' || p.startsWith('/admin/')) {
-    return basicAuth(req, res, next);
-  }
-  return next();
-});
+app.use(adminProtection);
 
 // Serve public static files
 app.use(express.static(PUBLIC_DIR));
@@ -72,42 +108,31 @@ app.get('/api/points', (req, res) => {
 });
 
 // API: add point
-app.post('/api/points', basicAuth, (req, res) => {
+app.post('/api/points', adminLimiter, basicAuth, validatePoint, (req, res, next) => {
   try {
     const { name, lat, lng, category, description } = req.body;
-    if (typeof lat === 'undefined' || typeof lng === 'undefined') {
-      return res.status(400).json({ error: 'lat,lng required' });
-    }
-    if (!name || !category) {
-      return res.status(400).json({ error: 'name and category required' });
-    }
-    if (!['rendah', 'sedang', 'tinggi'].includes(category)) {
-      return res.status(400).json({ error: 'category must be rendah, sedang, or tinggi' });
-    }
     
     const id = db.createPoint(name, Number(lat), Number(lng), category, description || null);
     const point = db.getPointById(id);
     res.json(point);
   } catch (err) {
-    console.error('Error adding point:', err);
-    res.status(500).json({ error: 'Failed to add point' });
+    next(err);
   }
 });
 
 // API: delete point
-app.delete('/api/points/:id', basicAuth, (req, res) => {
+app.delete('/api/points/:id', adminLimiter, basicAuth, validateId, (req, res, next) => {
   try {
     const id = Number(req.params.id);
     const result = db.deletePoint(id);
     res.json({ ok: true, removed: result.changes });
   } catch (err) {
-    console.error('Error deleting point:', err);
-    res.status(500).json({ error: 'Failed to delete point' });
+    next(err);
   }
 });
 
 // API: update point
-app.patch('/api/points/:id', basicAuth, (req, res) => {
+app.patch('/api/points/:id', adminLimiter, basicAuth, validateId, (req, res, next) => {
   try {
     const id = Number(req.params.id);
     const point = db.getPointById(id);
@@ -128,8 +153,7 @@ app.patch('/api/points/:id', basicAuth, (req, res) => {
     const updated = db.getPointById(id);
     res.json(updated);
   } catch (err) {
-    console.error('Error updating point:', err);
-    res.status(500).json({ error: 'Failed to update point' });
+    next(err);
   }
 });
 
@@ -163,7 +187,7 @@ app.get('/api/banner', (req, res) => {
 });
 
 // API: Upload banner as BLOB to database
-app.post('/api/banner', basicAuth, (req, res) => {
+app.post('/api/banner', adminLimiter, basicAuth, validateBanner, (req, res, next) => {
   try {
     const caption = req.body.caption || 'Informasi Area Rawan Narkoba - Kota Tanjungpinang';
     const data = req.body.data; // base64 string with data:... prefix (optional)
@@ -187,8 +211,7 @@ app.post('/api/banner', basicAuth, (req, res) => {
     
     res.json({ ok: true, caption });
   } catch (err) {
-    console.error('Error uploading banner:', err);
-    res.status(500).json({ error: 'Failed to upload banner' });
+    next(err);
   }
 });
 
@@ -209,7 +232,7 @@ app.get('/api/logo/image', (req, res) => {
 });
 
 // API: Upload logo as BLOB to database
-app.post('/api/logo', basicAuth, (req, res) => {
+app.post('/api/logo', adminLimiter, basicAuth, (req, res, next) => {
   try {
     const data = req.body.data; // base64 string possibly with data:... prefix
     if (!data) return res.status(400).json({ error: 'data (base64) required' });
@@ -226,8 +249,7 @@ app.post('/api/logo', basicAuth, (req, res) => {
     
     res.json({ ok: true });
   } catch (err) {
-    console.error('Logo upload error:', err);
-    res.status(500).json({ error: 'Upload failed: ' + err.message });
+    next(err);
   }
 });
 
@@ -261,7 +283,7 @@ app.get('/api/news/:id/image', (req, res) => {
 });
 
 // Search news
-app.get('/api/news/search', (req, res) => {
+app.get('/api/news/search', validateSearchQuery, (req, res, next) => {
   try {
     const query = req.query.q || '';
     if (!query) {
@@ -270,8 +292,7 @@ app.get('/api/news/search', (req, res) => {
     const results = db.searchNews(query);
     res.json(results);
   } catch (err) {
-    console.error('Error searching news:', err);
-    res.status(500).json({ error: 'Failed to search news' });
+    next(err);
   }
 });
 
@@ -290,12 +311,9 @@ app.get('/api/news/:id', (req, res) => {
 });
 
 // Create news (admin only)
-app.post('/api/news', basicAuth, (req, res) => {
+app.post('/api/news', adminLimiter, basicAuth, validateNews, (req, res, next) => {
   try {
     const { title, content, image_data, author } = req.body;
-    if (!title || !content || !author) {
-      return res.status(400).json({ error: 'Title, content, and author are required' });
-    }
     
     // Convert base64 image to BLOB if provided
     let imageBuffer = null;
@@ -312,18 +330,14 @@ app.post('/api/news', basicAuth, (req, res) => {
     
     res.json({ ok: true, id: result.lastInsertRowid });
   } catch (err) {
-    console.error('Error creating news:', err);
-    res.status(500).json({ error: 'Failed to create news' });
+    next(err);
   }
 });
 
 // Update news (admin only)
-app.put('/api/news/:id', basicAuth, (req, res) => {
+app.put('/api/news/:id', adminLimiter, basicAuth, validateId, validateNews, (req, res, next) => {
   try {
     const { title, content, image_data, author } = req.body;
-    if (!title || !content || !author) {
-      return res.status(400).json({ error: 'Title, content, and author are required' });
-    }
     
     // Convert base64 image to BLOB if provided
     let imageBuffer = null;
@@ -340,20 +354,18 @@ app.put('/api/news/:id', basicAuth, (req, res) => {
     
     res.json({ ok: true });
   } catch (err) {
-    console.error('Error updating news:', err);
-    res.status(500).json({ error: 'Failed to update news' });
+    next(err);
   }
 });
 
 // Delete news (admin only)
-app.delete('/api/news/:id', basicAuth, (req, res) => {
+app.delete('/api/news/:id', adminLimiter, basicAuth, validateId, (req, res, next) => {
   try {
     db.deleteNews(req.params.id);
     console.log('✅ News deleted from database');
     res.json({ ok: true });
   } catch (err) {
-    console.error('Error deleting news:', err);
-    res.status(500).json({ error: 'Failed to delete news' });
+    next(err);
   }
 });
 
@@ -387,14 +399,30 @@ app.get('/', (req, res) => {
 
 // (kelurahan upload endpoint removed)
 
+// Error handling middleware (must be last)
+app.use(notFoundHandler);
+app.use(errorHandler);
+
 // Start server - listen on 0.0.0.0 for Railway/Docker compatibility
 const HOST = process.env.HOST || '0.0.0.0';
-app.listen(PORT, HOST, () => {
+const server = app.listen(PORT, HOST, () => {
   console.log(`✅ Server started on ${HOST}:${PORT}`);
   console.log(`📍 Public map: http://localhost:${PORT}`);
   console.log(`🔐 Admin panel: http://localhost:${PORT}/admin`);
-  console.log(`👤 Admin credentials: ${ADMIN_USER} / ${ADMIN_PASS}`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`👤 Admin credentials: ${process.env.ADMIN_USER || 'admin'} / ${process.env.ADMIN_PASS || 'password'}`);
+  }
 });
 
-// Export for Railway/other platforms
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+    db.db.close();
+    process.exit(0);
+  });
+});
+
+// Export for testing and Railway/other platforms
 module.exports = app;

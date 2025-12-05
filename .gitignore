@@ -2,3 +2,14 @@ node_modules/
 data/db.sqlite
 public/uploads/
 .env
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+tests/*.db
+tests/**/*.db
+
+# Logs
+*.log
+npm-debug.log*
