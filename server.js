@@ -298,6 +298,19 @@ app.put('/api/news/:id', basicAuth, (req, res) => {
       return res.status(400).json({ error: 'Title, content, and author are required' });
     }
     db.updateNews(req.params.id, title, content, image_data || null, author);
+    
+    // Backup news after update
+    try {
+      const allNews = db.getAllNews();
+      fs.writeFileSync(
+        path.join(__dirname, 'data', 'news-backup.json'), 
+        JSON.stringify(allNews, null, 2)
+      );
+      console.log('✅ News backup updated after edit');
+    } catch (backupErr) {
+      console.warn('⚠️ Failed to update news backup:', backupErr.message);
+    }
+    
     res.json({ ok: true });
   } catch (err) {
     console.error('Error updating news:', err);

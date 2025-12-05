@@ -421,8 +421,9 @@
               📅 ${new Date(item.created_at).toLocaleDateString('id-ID', {year: 'numeric', month: 'long', day: 'numeric'})} | 
               👤 ${item.author}
             </div>
-            <p style="color:#6b7280; font-size:0.9rem; margin:0;">${item.content.substring(0, 100)}...</p>
+            <p style="color:#6b7280; font-size:0.9rem; margin:0;">${item.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
             <div class="news-admin-actions">
+              <button class="btn-edit" onclick="editNews(${item.id})">✏️ Edit</button>
               <button class="btn-delete" onclick="deleteNews(${item.id})">🗑️ Hapus</button>
             </div>
           </div>
@@ -433,7 +434,7 @@
     }
   }
 
-  // Submit news form
+  // Submit news form (create or update)
   document.getElementById('newsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -447,8 +448,11 @@
     }
     
     try {
-      const res = await fetch('/api/news', {
-        method: 'POST',
+      const url = editingNewsId ? `/api/news/${editingNewsId}` : '/api/news';
+      const method = editingNewsId ? 'PUT' : 'POST';
+      
+      const res = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
@@ -459,22 +463,102 @@
       });
       
       if (res.ok) {
-        alert('✅ Berita berhasil diposting!');
+        alert(editingNewsId ? '✅ Berita berhasil diupdate!' : '✅ Berita berhasil diposting!');
+        
+        // Reset form
         e.target.reset();
-        quill.setContents([]); // Clear editor
+        quill.setContents([]);
         newsImageData = null;
         newsImagePreview.style.display = 'none';
         newsImagePlaceholder.style.display = 'block';
         newsImageFileName.style.display = 'none';
+        
+        // Reset edit mode
+        if (editingNewsId) {
+          cancelEdit();
+        }
+        
         loadNewsList();
       } else {
-        alert('❌ Gagal memposting berita');
+        alert(editingNewsId ? '❌ Gagal mengupdate berita' : '❌ Gagal memposting berita');
       }
     } catch (err) {
-      console.error('Error posting news:', err);
-      alert('❌ Terjadi kesalahan saat memposting berita');
+      console.error('Error saving news:', err);
+      alert('❌ Terjadi kesalahan saat menyimpan berita');
     }
   });
+
+  // Edit news function
+  let editingNewsId = null;
+  
+  window.editNews = async (id) => {
+    try {
+      const res = await fetch(`/api/news/${id}`);
+      const news = await res.json();
+      
+      // Populate form with existing data
+      document.getElementById('newsTitle').value = news.title;
+      document.getElementById('newsAuthor').value = news.author;
+      quill.root.innerHTML = news.content;
+      
+      // Set image if exists
+      if (news.image_data) {
+        newsImageData = news.image_data;
+        newsImagePreview.src = news.image_data;
+        newsImagePreview.style.display = 'block';
+        newsImagePlaceholder.style.display = 'none';
+        newsImageFileName.style.display = 'block';
+        newsImageFileName.querySelector('span').textContent = 'Gambar saat ini';
+      }
+      
+      // Set editing mode
+      editingNewsId = id;
+      
+      // Update form UI
+      const submitBtn = document.querySelector('#newsForm button[type="submit"]');
+      submitBtn.textContent = '💾 Update Berita';
+      submitBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+      
+      // Add cancel button if not exists
+      let cancelBtn = document.getElementById('cancelEditBtn');
+      if (!cancelBtn) {
+        cancelBtn = document.createElement('button');
+        cancelBtn.id = 'cancelEditBtn';
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'btn';
+        cancelBtn.textContent = '❌ Batal Edit';
+        cancelBtn.style.background = 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
+        cancelBtn.style.marginTop = '10px';
+        cancelBtn.onclick = cancelEdit;
+        submitBtn.parentElement.insertBefore(cancelBtn, submitBtn.nextSibling);
+      }
+      
+      // Scroll to form
+      document.querySelector('.admin-card:has(#newsForm)').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+    } catch (err) {
+      console.error('Error loading news for edit:', err);
+      alert('❌ Gagal memuat data berita');
+    }
+  };
+  
+  // Cancel edit function
+  function cancelEdit() {
+    editingNewsId = null;
+    document.getElementById('newsForm').reset();
+    quill.setContents([]);
+    newsImageData = null;
+    newsImagePreview.style.display = 'none';
+    newsImagePlaceholder.style.display = 'block';
+    newsImageFileName.style.display = 'none';
+    
+    const submitBtn = document.querySelector('#newsForm button[type="submit"]');
+    submitBtn.textContent = '📤 Posting Berita';
+    submitBtn.style.background = 'linear-gradient(135deg, #0052b4 0%, #003d82 100%)';
+    
+    const cancelBtn = document.getElementById('cancelEditBtn');
+    if (cancelBtn) cancelBtn.remove();
+  }
 
   // Delete news function
   window.deleteNews = async (id) => {
