@@ -364,7 +364,8 @@
         ['clean']
       ]
     },
-    placeholder: 'Tulis isi berita lengkap dengan format...'
+    formats: ['header', 'bold', 'italic', 'underline', 'strike', 'list', 'bullet', 'align', 'link', 'blockquote'],
+    placeholder: 'Tulis isi berita lengkap dengan format... (Tekan Enter 2x untuk spasi antar paragraf)'
   });
 
   // News image preview

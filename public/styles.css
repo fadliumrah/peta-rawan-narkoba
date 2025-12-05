@@ -190,7 +190,8 @@ main { padding:30px 40px; max-width:1400px; margin:0 auto; position:relative; z-
 .modal-meta span { display:flex; align-items:center; gap:6px; }
 .modal-image { width:100%; max-height:500px; object-fit:cover; }
 .modal-body { padding:30px 40px 40px 40px; }
-.modal-body p { margin:0 0 16px 0; line-height:1.8; color:#374151; font-size:1.05rem; }
+.modal-body p { margin:0 0 1em 0; line-height:1.8; color:#374151; font-size:1.05rem; min-height:1em; }
+.modal-body p:empty { margin:0 0 1em 0; }
 .modal-body h1, .modal-body h2, .modal-body h3 { color:#1f2937; margin:24px 0 12px 0; font-weight:700; }
 .modal-body h1 { font-size:1.8rem; }
 .modal-body h2 { font-size:1.5rem; }
@@ -203,6 +204,8 @@ main { padding:30px 40px; max-width:1400px; margin:0 auto; position:relative; z-
 /* Quill Editor Styling */
 .ql-container { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:1rem; }
 .ql-editor { min-height:300px; }
+.ql-editor p { margin:0 0 1em 0; min-height:1em; }
+.ql-editor p:empty { margin:0 0 1em 0; }
 
 /* Footer - Official BNN Modern Theme */
 .footer { background:linear-gradient(135deg, #002855 0%, #003d82 50%, #0052b4 100%); color:white; padding:32px 0; margin-top:50px; text-align:center; border-top:3px solid #ffd700; box-shadow:0 -4px 16px rgba(0,40,85,0.3); }
