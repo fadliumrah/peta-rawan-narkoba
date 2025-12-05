@@ -137,7 +137,7 @@
   
   legend.addTo(map);
 
-  // Load points with interactive animated markers
+  // Load points with kelurahan-based colors
   let markersLayer = L.layerGroup().addTo(map);
   
   function loadPoints(){
@@ -147,114 +147,36 @@
       // Count points per kelurahan
       const counts = {};
       
-      points.forEach((p, index)=>{
+      points.forEach(p=>{
         const kelurahanName = p.name || 'Tidak Diketahui';
         counts[kelurahanName] = (counts[kelurahanName] || 0) + 1;
         
         // Get color from kelurahan map, default to gray if not found
         const markerColor = kelurahanColorMap[kelurahanName] || '#999999';
         
-        // Create main marker with animation
         const m = L.circleMarker([p.lat, p.lng], {
-          radius: 6,
-          color: markerColor,
+          radius: 10,
+          color: '#ffffff',
           weight: 2,
           fillColor: markerColor,
-          fillOpacity: 0.8,
-          className: 'animated-marker'
+          fillOpacity: 0.9
         }).addTo(markersLayer);
-        
-        // Create pulse ring effect
-        const pulseRing = L.circleMarker([p.lat, p.lng], {
-          radius: 6,
-          color: markerColor,
-          weight: 3,
-          fillOpacity: 0,
-          className: 'marker-pulse-ring'
-        }).addTo(markersLayer);
-        
-        // Staggered animation delay for smooth appearance
-        setTimeout(() => {
-          if (m._path) {
-            m._path.style.animation = 'markerAppear 0.5s ease-out';
-          }
-        }, index * 50);
-        
-        // Category badge styling
-        const categoryColors = {
-          'rendah': '#10b981',
-          'sedang': '#f59e0b', 
-          'tinggi': '#ef4444'
-        };
-        const categoryLabels = {
-          'rendah': '🟢 Rendah',
-          'sedang': '🟡 Sedang',
-          'tinggi': '🔴 Tinggi'
-        };
-        
-        const categoryBadge = p.category ? `
-          <div style="display:inline-block; background:${categoryColors[p.category] || '#6b7280'}; color:white; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:600; margin-bottom:8px;">
-            ${categoryLabels[p.category] || p.category}
-          </div>
-        ` : '';
         
         const popupContent = `
-          <div style="min-width:220px; font-family:system-ui;">
-            <h3 style="margin:0 0 8px 0; font-size:1.1rem; color:#1e293b; font-weight:700;">${kelurahanName}</h3>
-            ${categoryBadge}
-            <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px;">
-              <div style="margin-bottom:6px;">
-                <strong style="color:#475569;">📍 Koordinat:</strong><br/>
-                <code style="background:#e2e8f0; padding:2px 6px; border-radius:4px; font-size:0.85rem;">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</code>
-              </div>
-              ${p.description ? `<div style="margin-top:8px; padding-top:8px; border-top:1px solid #e2e8f0;"><strong style="color:#475569;">📝 Keterangan:</strong><br/><span style="color:#64748b;">${p.description}</span></div>` : ''}
+          <div style="min-width:200px;">
+            <h3 style="margin:0 0 8px 0; font-size:1rem;">${kelurahanName}</h3>
+            <div style="margin-bottom:6px;">
+              <strong>📍 Koordinat:</strong><br/>
+              ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}
             </div>
-            <div style="color:#94a3b8; font-size:0.8rem; text-align:right;">
-              🕐 ${new Date(p.created_at).toLocaleDateString('id-ID', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })}
+            ${p.description ? `<div style="margin-bottom:6px;"><strong>📝 Keterangan:</strong><br/>${p.description}</div>` : ''}
+            <div style="color:#999; font-size:0.85rem; margin-top:8px;">
+              <small>🕐 ${new Date(p.created_at).toLocaleDateString('id-ID', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })}</small>
             </div>
           </div>
         `;
-        m.bindPopup(popupContent, {
-          maxWidth: 300,
-          className: 'custom-popup'
-        });
-        
-        // Enhanced tooltip
-        m.bindTooltip(kelurahanName, {
-          direction:'top', 
-          offset:[0,-10],
-          className: 'custom-tooltip'
-        });
-        
-        // Interactive hover effects
-        m.on('mouseover', function(e) {
-          this.setStyle({
-            radius: 9,
-            weight: 3,
-            fillOpacity: 1
-          });
-          pulseRing.setStyle({ radius: 20, weight: 2 });
-        });
-        
-        m.on('mouseout', function(e) {
-          this.setStyle({
-            radius: 6,
-            weight: 2,
-            fillOpacity: 0.8
-          });
-          pulseRing.setStyle({ radius: 6, weight: 3 });
-        });
-        
-        // Click animation
-        m.on('click', function(e) {
-          // Bounce effect
-          if (this._path) {
-            this._path.style.animation = 'markerBounce 0.5s ease';
-            setTimeout(() => {
-              if (this._path) this._path.style.animation = '';
-            }, 500);
-          }
-        });
+        m.bindPopup(popupContent);
+        m.bindTooltip(kelurahanName, {direction:'top', offset:[0,-8]});
       });
       
       // Update legend counts
