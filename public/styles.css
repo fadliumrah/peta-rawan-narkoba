@@ -44,9 +44,43 @@ main { padding:20px 60px; max-width:1200px; margin:0 auto; position:relative; z-
 .form-row .form-field { width:48%; }
 
 /* Map Styling */
-#adminMap { border-radius:0 0 12px 12px; }
-.admin-map-large { height:500px; border-radius:0 0 12px 12px; margin:-1px; }
-#adminMap { border-radius:0 0 12px 12px; }
+#adminMap { 
+	border-radius:0 0 12px 12px; 
+	width:100%;
+	height:100%;
+	position:relative;
+	z-index:1;
+}
+.admin-map-large { 
+	height:450px; 
+	border-radius:0 0 12px 12px; 
+	margin:0;
+	position:relative;
+}
+/* Ensure Leaflet controls don't overlap header */
+#adminMap .leaflet-top,
+#map .leaflet-top {
+	top:10px;
+}
+#adminMap .leaflet-control-zoom,
+#map .leaflet-control-zoom {
+	margin-top:0 !important;
+	border:2px solid rgba(0,0,0,0.2);
+	border-radius:4px;
+	box-shadow:0 1px 5px rgba(0,0,0,0.2);
+}
+/* Ensure Leaflet attribution stays in map */
+#adminMap .leaflet-bottom,
+#map .leaflet-bottom {
+	position:absolute;
+	z-index:1000;
+}
+#adminMap .leaflet-control-attribution,
+#map .leaflet-control-attribution {
+	background:rgba(255,255,255,0.8);
+	padding:2px 5px;
+	font-size:10px;
+}
 
 /* Kelurahan label (centroid) */
 .kel-label { pointer-events: none; }
@@ -203,15 +237,24 @@ main { padding:20px 60px; max-width:1200px; margin:0 auto; position:relative; z-
 	}
 	
 	/* Admin adjustments */
-	.admin-panel { padding:12px 8px; }
-	.admin-card { width:100%; max-width:100%; margin:0; }
-	.admin-map-large { height:280px; }
-	.card-title { font-size:0.95rem; padding:12px 12px 8px 12px; }
-	.card-subtitle { font-size:0.8rem; padding:0 12px; }
-	.card-content { padding:12px; }
+	.admin-panel { padding:12px; }
+	.admin-card { width:100%; max-width:100%; margin:0; border-radius:8px; }
+	.admin-map-large { height:320px; }
+	.card-title { font-size:0.9rem; padding:12px 14px 8px 14px; }
+	.card-subtitle { font-size:0.8rem; padding:0 14px; }
+	.card-content { padding:14px; }
+	.form-field { margin-bottom:12px; }
+	.form-field label { font-size:0.85rem; margin-bottom:4px; }
+	.form-field input,
+	.form-field select,
+	.form-field textarea { font-size:0.9rem; padding:8px 10px; }
+	.form-row { flex-direction:column; gap:0; }
+	.form-row .form-field { width:100%; }
 	.btn { padding:10px 12px; font-size:0.9rem; }
-	.points-list li { flex-direction:column; align-items:flex-start; }
-	.points-list li button { width:100%; margin-top:8px; }
+	.points-list li { flex-direction:column; align-items:flex-start; padding:10px; }
+	.points-list li button { width:100%; margin-top:8px; font-size:0.85rem; padding:8px; }
+	#adminMap .leaflet-control-zoom { margin-right:5px; }
+	#adminMap .leaflet-control-zoom a { width:28px; height:28px; line-height:28px; font-size:16px; }
 	
 	/* Admin header - hide subtitle on mobile */
 }
@@ -267,10 +310,21 @@ main { padding:20px 60px; max-width:1200px; margin:0 auto; position:relative; z-
 	.caption { font-size:0.95rem; line-height:1.5; }
 	main { padding:10px 8px; }
 	#map { height:350px; }
-	.admin-panel { padding:10px 6px; }
-	.admin-card { border-radius:8px; }
-	.card-title { font-size:0.9rem; padding:10px; }
-	.card-content { padding:10px; }
+	.admin-panel { padding:8px; }
+	.admin-card { border-radius:8px; margin-bottom:12px; }
+	.admin-map-large { height:280px; }
+	.card-title { font-size:0.85rem; padding:10px 12px 6px 12px; }
+	.card-content { padding:12px; }
+	.form-field { margin-bottom:10px; }
+	.form-field label { font-size:0.8rem; }
+	.form-field input,
+	.form-field select,
+	.form-field textarea { font-size:0.85rem; padding:7px 9px; }
+	.btn { padding:9px 10px; font-size:0.85rem; }
+	#gpsBtn { font-size:0.8rem; padding:8px 10px; }
+	.points-list li { padding:8px; }
+	.points-list li strong { font-size:0.85rem; }
+	.points-list li small { font-size:0.75rem; }
 	.footer { padding:12px 0; }
 	.footer.admin-footer { padding:10px 0; }
 	.footer.admin-footer p { font-size:0.7rem; }
