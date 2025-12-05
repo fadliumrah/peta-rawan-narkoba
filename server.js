@@ -1,7 +1,13 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const compression = require('compression');
+const cors = require('cors');
 const db = require('./database');
+const { securityHeaders, apiLimiter, authLimiter, uploadLimiter } = require('./middleware/security');
+const { basicAuth, requireAuthForPath, ADMIN_USER, ADMIN_PASS } = require('./middleware/auth');
+const { validatePoint, validateNews } = require('./middleware/validation');
+const { parseImageData } = require('./utils/imageHandler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,42 +16,17 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 const UPLOADS_DIR = path.join(PUBLIC_DIR, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
+// Security middleware
+app.use(securityHeaders);
+app.use(compression()); // Enable gzip compression
+app.use(cors()); // Enable CORS for API endpoints
+
+// Body parsing middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Basic Admin credentials (change via env vars)
-const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS = process.env.ADMIN_PASS || 'password';
-
-function basicAuth(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth) {
-    res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
-    return res.status(401).send('Authentication required');
-  }
-  const parts = auth.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Basic') {
-    res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
-    return res.status(401).send('Authentication required');
-  }
-  const credentials = Buffer.from(parts[1], 'base64').toString();
-  const idx = credentials.indexOf(':');
-  if (idx === -1) return res.status(401).send('Authentication required');
-  const user = credentials.slice(0, idx);
-  const pass = credentials.slice(idx + 1);
-  if (user === ADMIN_USER && pass === ADMIN_PASS) return next();
-  res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
-  return res.status(401).send('Authentication required');
-}
-
 // Protect admin routes with Basic Auth
-app.use((req, res, next) => {
-  const p = req.path || '';
-  if (p === '/admin.html' || p === '/admin' || p.startsWith('/admin/')) {
-    return basicAuth(req, res, next);
-  }
-  return next();
-});
+app.use(requireAuthForPath);
 
 // Serve public static files
 app.use(express.static(PUBLIC_DIR));
@@ -61,7 +42,7 @@ const DATA_DIR = path.join(__dirname, 'data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
 // API: get points
-app.get('/api/points', (req, res) => {
+app.get('/api/points', apiLimiter, (req, res) => {
   try {
     const points = db.getAllPoints();
     res.json(points);
@@ -72,19 +53,9 @@ app.get('/api/points', (req, res) => {
 });
 
 // API: add point
-app.post('/api/points', basicAuth, (req, res) => {
+app.post('/api/points', authLimiter, basicAuth, validatePoint, (req, res) => {
   try {
     const { name, lat, lng, category, description } = req.body;
-    if (typeof lat === 'undefined' || typeof lng === 'undefined') {
-      return res.status(400).json({ error: 'lat,lng required' });
-    }
-    if (!name || !category) {
-      return res.status(400).json({ error: 'name and category required' });
-    }
-    if (!['rendah', 'sedang', 'tinggi'].includes(category)) {
-      return res.status(400).json({ error: 'category must be rendah, sedang, or tinggi' });
-    }
-    
     const id = db.createPoint(name, Number(lat), Number(lng), category, description || null);
     const point = db.getPointById(id);
     res.json(point);
@@ -95,7 +66,7 @@ app.post('/api/points', basicAuth, (req, res) => {
 });
 
 // API: delete point
-app.delete('/api/points/:id', basicAuth, (req, res) => {
+app.delete('/api/points/:id', authLimiter, basicAuth, (req, res) => {
   try {
     const id = Number(req.params.id);
     const result = db.deletePoint(id);
@@ -107,7 +78,7 @@ app.delete('/api/points/:id', basicAuth, (req, res) => {
 });
 
 // API: update point
-app.patch('/api/points/:id', basicAuth, (req, res) => {
+app.patch('/api/points/:id', authLimiter, basicAuth, (req, res) => {
   try {
     const id = Number(req.params.id);
     const point = db.getPointById(id);
@@ -134,7 +105,7 @@ app.patch('/api/points/:id', basicAuth, (req, res) => {
 });
 
 // API: Get banner image as BLOB
-app.get('/api/banner/image', (req, res) => {
+app.get('/api/banner/image', apiLimiter, (req, res) => {
   try {
     const banner = db.getBanner();
     if (!banner || !banner.image_data) {
@@ -150,7 +121,7 @@ app.get('/api/banner/image', (req, res) => {
 });
 
 // API: Get banner caption
-app.get('/api/banner', (req, res) => {
+app.get('/api/banner', apiLimiter, (req, res) => {
   try {
     const banner = db.getBanner();
     res.json({ 
@@ -163,10 +134,10 @@ app.get('/api/banner', (req, res) => {
 });
 
 // API: Upload banner as BLOB to database
-app.post('/api/banner', basicAuth, (req, res) => {
+app.post('/api/banner', uploadLimiter, basicAuth, (req, res) => {
   try {
     const caption = req.body.caption || 'Informasi Area Rawan Narkoba - Kota Tanjungpinang';
-    const data = req.body.data; // base64 string with data:... prefix (optional)
+    const data = req.body.data;
     
     // If no image data provided, only update caption
     if (!data) {
@@ -175,11 +146,8 @@ app.post('/api/banner', basicAuth, (req, res) => {
       return res.json({ ok: true, caption });
     }
     
-    // Extract base64 data and mime type
-    const match = data.match(/^data:(image\/\w+);base64,(.*)$/);
-    const mimeType = match ? match[1] : 'image/png';
-    const b64 = match ? match[2] : data;
-    const buffer = Buffer.from(b64, 'base64');
+    // Parse image data using utility function
+    const { buffer, mimeType } = parseImageData(data);
     
     // Save to database as BLOB
     db.updateBanner(buffer, mimeType, caption);
@@ -188,12 +156,12 @@ app.post('/api/banner', basicAuth, (req, res) => {
     res.json({ ok: true, caption });
   } catch (err) {
     console.error('Error uploading banner:', err);
-    res.status(500).json({ error: 'Failed to upload banner' });
+    res.status(500).json({ error: 'Failed to upload banner: ' + err.message });
   }
 });
 
 // API: Get logo image as BLOB
-app.get('/api/logo/image', (req, res) => {
+app.get('/api/logo/image', apiLimiter, (req, res) => {
   try {
     const logo = db.getLogo();
     if (!logo || !logo.image_data) {
@@ -209,16 +177,13 @@ app.get('/api/logo/image', (req, res) => {
 });
 
 // API: Upload logo as BLOB to database
-app.post('/api/logo', basicAuth, (req, res) => {
+app.post('/api/logo', uploadLimiter, basicAuth, (req, res) => {
   try {
-    const data = req.body.data; // base64 string possibly with data:... prefix
+    const data = req.body.data;
     if (!data) return res.status(400).json({ error: 'data (base64) required' });
     
-    // Extract base64 data and mime type
-    const match = data.match(/^data:(image\/\w+);base64,(.*)$/);
-    const mimeType = match ? match[1] : 'image/png';
-    const b64 = match ? match[2] : data;
-    const buffer = Buffer.from(b64, 'base64');
+    // Parse image data using utility function
+    const { buffer, mimeType } = parseImageData(data);
     
     // Save to database as BLOB
     db.updateLogo(buffer, mimeType);
@@ -234,7 +199,7 @@ app.post('/api/logo', basicAuth, (req, res) => {
 // ===== NEWS API ENDPOINTS =====
 
 // Get all news
-app.get('/api/news', (req, res) => {
+app.get('/api/news', apiLimiter, (req, res) => {
   try {
     const news = db.getAllNews();
     res.json(news);
@@ -245,7 +210,7 @@ app.get('/api/news', (req, res) => {
 });
 
 // Get news image as BLOB
-app.get('/api/news/:id/image', (req, res) => {
+app.get('/api/news/:id/image', apiLimiter, (req, res) => {
   try {
     const news = db.getNewsById(req.params.id);
     if (!news || !news.image_data) {
@@ -261,7 +226,7 @@ app.get('/api/news/:id/image', (req, res) => {
 });
 
 // Search news
-app.get('/api/news/search', (req, res) => {
+app.get('/api/news/search', apiLimiter, (req, res) => {
   try {
     const query = req.query.q || '';
     if (!query) {
@@ -276,7 +241,7 @@ app.get('/api/news/search', (req, res) => {
 });
 
 // Get single news by ID
-app.get('/api/news/:id', (req, res) => {
+app.get('/api/news/:id', apiLimiter, (req, res) => {
   try {
     const news = db.getNewsById(req.params.id);
     if (!news) {
@@ -290,21 +255,17 @@ app.get('/api/news/:id', (req, res) => {
 });
 
 // Create news (admin only)
-app.post('/api/news', basicAuth, (req, res) => {
+app.post('/api/news', uploadLimiter, basicAuth, validateNews, (req, res) => {
   try {
     const { title, content, image_data, author } = req.body;
-    if (!title || !content || !author) {
-      return res.status(400).json({ error: 'Title, content, and author are required' });
-    }
     
     // Convert base64 image to BLOB if provided
     let imageBuffer = null;
     let mimeType = null;
     if (image_data) {
-      const match = image_data.match(/^data:(image\/\w+);base64,(.*)$/);
-      mimeType = match ? match[1] : 'image/jpeg';
-      const b64 = match ? match[2] : image_data;
-      imageBuffer = Buffer.from(b64, 'base64');
+      const parsed = parseImageData(image_data);
+      imageBuffer = parsed.buffer;
+      mimeType = parsed.mimeType;
     }
     
     const result = db.createNews(title, content, imageBuffer, mimeType, author);
@@ -313,26 +274,22 @@ app.post('/api/news', basicAuth, (req, res) => {
     res.json({ ok: true, id: result.lastInsertRowid });
   } catch (err) {
     console.error('Error creating news:', err);
-    res.status(500).json({ error: 'Failed to create news' });
+    res.status(500).json({ error: 'Failed to create news: ' + err.message });
   }
 });
 
 // Update news (admin only)
-app.put('/api/news/:id', basicAuth, (req, res) => {
+app.put('/api/news/:id', uploadLimiter, basicAuth, validateNews, (req, res) => {
   try {
     const { title, content, image_data, author } = req.body;
-    if (!title || !content || !author) {
-      return res.status(400).json({ error: 'Title, content, and author are required' });
-    }
     
     // Convert base64 image to BLOB if provided
     let imageBuffer = null;
     let mimeType = null;
     if (image_data) {
-      const match = image_data.match(/^data:(image\/\w+);base64,(.*)$/);
-      mimeType = match ? match[1] : 'image/jpeg';
-      const b64 = match ? match[2] : image_data;
-      imageBuffer = Buffer.from(b64, 'base64');
+      const parsed = parseImageData(image_data);
+      imageBuffer = parsed.buffer;
+      mimeType = parsed.mimeType;
     }
     
     db.updateNews(req.params.id, title, content, imageBuffer, mimeType, author);
@@ -341,12 +298,12 @@ app.put('/api/news/:id', basicAuth, (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Error updating news:', err);
-    res.status(500).json({ error: 'Failed to update news' });
+    res.status(500).json({ error: 'Failed to update news: ' + err.message });
   }
 });
 
 // Delete news (admin only)
-app.delete('/api/news/:id', basicAuth, (req, res) => {
+app.delete('/api/news/:id', authLimiter, basicAuth, (req, res) => {
   try {
     db.deleteNews(req.params.id);
     console.log('✅ News deleted from database');
@@ -371,13 +328,29 @@ app.get('/data/kelurahan.geojson', (req, res) => {
 });
 
 // Expose minimal runtime config for frontend (e.g., Google Maps API key)
-app.get('/api/config', (req, res) => {
+app.get('/api/config', apiLimiter, (req, res) => {
   res.json({ GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || '' });
 });
 
 // Health check endpoint for Railway
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  try {
+    // Check database connectivity
+    const points = db.getAllPoints();
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+      pointsCount: points.length
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      status: 'error', 
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: err.message
+    });
+  }
 });
 
 // Root route
