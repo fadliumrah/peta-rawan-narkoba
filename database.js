@@ -19,6 +19,14 @@ const db = new Database(DB_PATH);
 // Enable foreign keys
 db.pragma('foreign_keys = ON');
 
+// Helper function to get Indonesia time (WIB = UTC+7)
+function getIndonesiaTime() {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const wibTime = new Date(utc + (7 * 3600000)); // UTC+7
+  return wibTime.toISOString().slice(0, 19).replace('T', ' ');
+}
+
 // Initialize database schema
 function initializeDatabase() {
   // Create points table
@@ -260,20 +268,22 @@ module.exports = {
   },
   
   createPoint: (name, lat, lng, category, description) => {
+    const wibTime = getIndonesiaTime();
     const result = db.prepare(`
-      INSERT INTO points (name, lat, lng, category, description)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(name, lat, lng, category, description);
+      INSERT INTO points (name, lat, lng, category, description, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(name, lat, lng, category, description, wibTime, wibTime);
     return result.lastInsertRowid;
   },
   
   updatePoint: (id, name, lat, lng, category, description) => {
+    const wibTime = getIndonesiaTime();
     return db.prepare(`
       UPDATE points 
       SET name = ?, lat = ?, lng = ?, category = ?, description = ?,
-          updated_at = CURRENT_TIMESTAMP
+          updated_at = ?
       WHERE id = ?
-    `).run(name, lat, lng, category, description, id);
+    `).run(name, lat, lng, category, description, wibTime, id);
   },
   
   deletePoint: (id) => {
@@ -286,25 +296,26 @@ module.exports = {
   },
   
   updateBanner: (imageBuffer, mimeType, caption) => {
+    const wibTime = getIndonesiaTime();
     // If no new image provided, only update caption
     if (imageBuffer === null || imageBuffer === undefined) {
       return db.prepare(`
         INSERT INTO banner (id, caption, updated_at)
-        VALUES (1, ?, CURRENT_TIMESTAMP)
+        VALUES (1, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           caption = excluded.caption,
-          updated_at = CURRENT_TIMESTAMP
-      `).run(caption);
+          updated_at = excluded.updated_at
+      `).run(caption, wibTime);
     } else {
       return db.prepare(`
         INSERT INTO banner (id, image_data, mime_type, caption, updated_at)
-        VALUES (1, ?, ?, ?, CURRENT_TIMESTAMP)
+        VALUES (1, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           image_data = excluded.image_data,
           mime_type = excluded.mime_type,
           caption = excluded.caption,
-          updated_at = CURRENT_TIMESTAMP
-      `).run(imageBuffer, mimeType, caption);
+          updated_at = excluded.updated_at
+      `).run(imageBuffer, mimeType, caption, wibTime);
     }
   },
   
@@ -314,14 +325,15 @@ module.exports = {
   },
   
   updateLogo: (imageBuffer, mimeType) => {
+    const wibTime = getIndonesiaTime();
     return db.prepare(`
       INSERT INTO logo (id, image_data, mime_type, updated_at)
-      VALUES (1, ?, ?, CURRENT_TIMESTAMP)
+      VALUES (1, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         image_data = excluded.image_data,
         mime_type = excluded.mime_type,
-        updated_at = CURRENT_TIMESTAMP
-    `).run(imageBuffer, mimeType);
+        updated_at = excluded.updated_at
+    `).run(imageBuffer, mimeType, wibTime);
   },
 
   // News operations
@@ -343,28 +355,31 @@ module.exports = {
   },
 
   createNews: (title, content, imageBuffer, mimeType, author) => {
+    const wibTime = getIndonesiaTime();
     return db.prepare(`
-      INSERT INTO news (title, content, image_data, mime_type, author)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(title, content, imageBuffer, mimeType, author);
+      INSERT INTO news (title, content, image_data, mime_type, author, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(title, content, imageBuffer, mimeType, author, wibTime, wibTime);
   },
 
   updateNews: (id, title, content, imageBuffer, mimeType, author) => {
     // If no new image provided, only update text fields
     if (imageBuffer === null || imageBuffer === undefined) {
+      const wibTime = getIndonesiaTime();
       return db.prepare(`
         UPDATE news 
         SET title = ?, content = ?, author = ?,
-            updated_at = CURRENT_TIMESTAMP
+            updated_at = ?
         WHERE id = ?
-      `).run(title, content, author, id);
+      `).run(title, content, author, wibTime, id);
     } else {
+      const wibTime = getIndonesiaTime();
       return db.prepare(`
         UPDATE news 
         SET title = ?, content = ?, image_data = ?, mime_type = ?, author = ?,
-            updated_at = CURRENT_TIMESTAMP
+            updated_at = ?
         WHERE id = ?
-      `).run(title, content, imageBuffer, mimeType, author, id);
+      `).run(title, content, imageBuffer, mimeType, author, wibTime, id);
     }
   },
 
