@@ -351,6 +351,22 @@
 
   // ===== NEWS MANAGEMENT =====
   
+  // Initialize Quill rich text editor
+  const quill = new Quill('#newsEditor', {
+    theme: 'snow',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['link', 'blockquote'],
+        ['clean']
+      ]
+    },
+    placeholder: 'Tulis isi berita lengkap dengan format...'
+  });
+
   // News image preview
   const newsImageInput = document.getElementById('newsImageInput');
   const newsImagePreview = document.getElementById('newsImagePreview');
@@ -417,9 +433,9 @@
     
     const title = document.getElementById('newsTitle').value;
     const author = document.getElementById('newsAuthor').value;
-    const content = document.getElementById('newsContent').value;
+    const content = quill.root.innerHTML; // Get HTML content from Quill
     
-    if (!title || !author || !content) {
+    if (!title || !author || !content || content === '<p><br></p>') {
       alert('Semua field wajib diisi!');
       return;
     }
@@ -439,6 +455,7 @@
       if (res.ok) {
         alert('✅ Berita berhasil diposting!');
         e.target.reset();
+        quill.setContents([]); // Clear editor
         newsImageData = null;
         newsImagePreview.style.display = 'none';
         newsImagePlaceholder.style.display = 'block';

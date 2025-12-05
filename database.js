@@ -199,6 +199,41 @@ function seedSampleData() {
     `).run(bannerData, bannerCaption);
     console.log('✅ Added banner to database');
   }
+  
+  // Restore news from backup if table is empty
+  const newsCount = db.prepare('SELECT COUNT(*) as count FROM news').get();
+  if (newsCount.count === 0) {
+    try {
+      const newsBackupPath = path.join(__dirname, 'data', 'news-backup.json');
+      if (fs.existsSync(newsBackupPath)) {
+        const newsBackup = JSON.parse(fs.readFileSync(newsBackupPath, 'utf8'));
+        if (Array.isArray(newsBackup) && newsBackup.length > 0) {
+          const insertNews = db.prepare(`
+            INSERT INTO news (title, content, image_data, author, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `);
+          
+          const restoreNews = db.transaction((newsList) => {
+            for (const news of newsList) {
+              insertNews.run(
+                news.title,
+                news.content,
+                news.image_data || null,
+                news.author,
+                news.created_at,
+                news.updated_at
+              );
+            }
+          });
+          
+          restoreNews(newsBackup);
+          console.log(`✅ Restored ${newsBackup.length} news articles from backup`);
+        }
+      }
+    } catch (newsBackupErr) {
+      console.warn('⚠️ Could not restore news from backup:', newsBackupErr.message);
+    }
+  }
 }
 
 // Seed sample data

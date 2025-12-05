@@ -248,6 +248,19 @@ app.post('/api/news', basicAuth, (req, res) => {
       return res.status(400).json({ error: 'Title, content, and author are required' });
     }
     const result = db.createNews(title, content, image_data || null, author);
+    
+    // Backup news to JSON file for persistence across redeploys
+    try {
+      const allNews = db.getAllNews();
+      fs.writeFileSync(
+        path.join(__dirname, 'data', 'news-backup.json'), 
+        JSON.stringify(allNews, null, 2)
+      );
+      console.log('✅ News backed up to news-backup.json');
+    } catch (backupErr) {
+      console.warn('⚠️ Failed to backup news:', backupErr.message);
+    }
+    
     res.json({ ok: true, id: result.lastInsertRowid });
   } catch (err) {
     console.error('Error creating news:', err);
@@ -274,6 +287,19 @@ app.put('/api/news/:id', basicAuth, (req, res) => {
 app.delete('/api/news/:id', basicAuth, (req, res) => {
   try {
     db.deleteNews(req.params.id);
+    
+    // Update backup after deletion
+    try {
+      const allNews = db.getAllNews();
+      fs.writeFileSync(
+        path.join(__dirname, 'data', 'news-backup.json'), 
+        JSON.stringify(allNews, null, 2)
+      );
+      console.log('✅ News backup updated after deletion');
+    } catch (backupErr) {
+      console.warn('⚠️ Failed to update news backup:', backupErr.message);
+    }
+    
     res.json({ ok: true });
   } catch (err) {
     console.error('Error deleting news:', err);

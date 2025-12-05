@@ -8,7 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>Peta Rawan Narkoba - Tanjungpinang</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="/styles.css?v=5.1" />
+  <link rel="stylesheet" href="/styles.css?v=5.2" />
 </head>
 <body>
   <nav class="top-nav">
@@ -57,6 +57,14 @@
     <div id="map" style="height:600px; margin-top:50px;"></div>
   </main>
 
+  <!-- News Detail Modal -->
+  <div id="newsModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <div id="newsModalBody"></div>
+    </div>
+  </div>
+
   <script>
     // Force reload logo with cache-busting timestamp
     document.getElementById('logoImg').src = '/logo-bnn.png?t=' + Date.now();
@@ -74,6 +82,6 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="/app.js?v=5.0"></script>
+  <script src="/app.js?v=5.2"></script>
 </body>
 </html>

@@ -252,22 +252,29 @@
     
     const newsToShow = newsToDisplay.slice(0, displayedCount);
     
-    newsGrid.innerHTML = newsToShow.map(news => `
-      <div class="news-card">
-        ${news.image_data ? 
-          `<img src="${news.image_data}" alt="${news.title}" class="news-card-image" />` : 
-          '<div class="news-card-image" style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); display:flex; align-items:center; justify-content:center; color:white; font-size:3rem;">📰</div>'
-        }
-        <div class="news-card-content">
-          <h3 class="news-card-title">${news.title}</h3>
-          <div class="news-card-meta">
-            <span>📅 ${new Date(news.created_at).toLocaleDateString('id-ID', {year: 'numeric', month: 'long', day: 'numeric'})}</span>
-            <span>👤 ${news.author}</span>
+    newsGrid.innerHTML = newsToShow.map(news => {
+      // Strip HTML tags for excerpt
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = news.content;
+      const plainText = tempDiv.textContent || tempDiv.innerText || '';
+      
+      return `
+        <div class="news-card" onclick="openNewsModal(${news.id})">
+          ${news.image_data ? 
+            `<img src="${news.image_data}" alt="${news.title}" class="news-card-image" />` : 
+            '<div class="news-card-image" style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); display:flex; align-items:center; justify-content:center; color:white; font-size:3rem;">📰</div>'
+          }
+          <div class="news-card-content">
+            <h3 class="news-card-title">${news.title}</h3>
+            <div class="news-card-meta">
+              <span>📅 ${new Date(news.created_at).toLocaleDateString('id-ID', {year: 'numeric', month: 'long', day: 'numeric'})}</span>
+              <span>👤 ${news.author}</span>
+            </div>
+            <p class="news-card-excerpt">${plainText}</p>
           </div>
-          <p class="news-card-excerpt">${news.content}</p>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
     
     // Show/hide "Show More" button
     if (newsToDisplay.length > displayedCount) {
@@ -276,6 +283,48 @@
       showMoreBtn.style.display = 'none';
     }
   }
+
+  // Open news detail modal
+  window.openNewsModal = function(newsId) {
+    const news = allNews.find(n => n.id === newsId);
+    if (!news) return;
+    
+    const modal = document.getElementById('newsModal');
+    const modalBody = document.getElementById('newsModalBody');
+    
+    modalBody.innerHTML = `
+      ${news.image_data ? `<img src="${news.image_data}" alt="${news.title}" class="modal-image" />` : ''}
+      <div class="modal-header">
+        <h2 class="modal-title">${news.title}</h2>
+        <div class="modal-meta">
+          <span>📅 ${new Date(news.created_at).toLocaleDateString('id-ID', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'})}</span>
+          <span>👤 Oleh: <strong>${news.author}</strong></span>
+        </div>
+      </div>
+      <div class="modal-body">
+        ${news.content}
+      </div>
+    `;
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
+
+  // Close modal
+  const modal = document.getElementById('newsModal');
+  const closeBtn = document.querySelector('.modal-close');
+  
+  closeBtn.onclick = function() {
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+  };
+  
+  window.onclick = function(event) {
+    if (event.target === modal) {
+      modal.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+  };
 
   // Search news
   const searchInput = document.getElementById('newsSearchInput');
