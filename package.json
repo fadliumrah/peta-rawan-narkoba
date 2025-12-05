@@ -5,7 +5,11 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "backup": "node backup-database.js",
+    "sync": "node sync-database.js",
+    "sync-push": "node sync-database.js && git push origin main",
+    "deploy": "node sync-database.js && git push origin main"
   },
   "engines": {
     "node": ">=20.x"
