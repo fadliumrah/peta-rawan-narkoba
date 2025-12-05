@@ -12,7 +12,7 @@
   <nav class="top-nav admin-nav">
     <div class="nav-container">
       <div class="nav-logo-section">
-        <img class="nav-logo" src="/logo-bnn.png" id="logoImg" alt="Logo BNN" />
+        <img class="nav-logo" src="/api/logo/image" id="logoImg" alt="Logo BNN" />
         <div class="nav-text">
           <h1 class="nav-title">Admin Dashboard</h1>
           <p class="nav-subtitle">Kelola Data Rawan Narkoba - Tanjungpinang</p>
@@ -57,7 +57,7 @@
         <h2 class="card-title">🏛️ Update Logo BNN</h2>
         <form id="logoForm" class="form-group card-content">
           <div style="text-align:center; margin-bottom:20px;">
-            <img id="logoPreview" src="/logo-bnn.svg" alt="Logo BNN" style="width:80px; height:80px; border-radius:8px; border:2px solid #ddd; background:white; padding:6px; display:inline-block;" />
+            <img id="logoPreview" src="/api/logo/image" alt="Logo BNN" style="width:80px; height:80px; border-radius:8px; border:2px solid #ddd; background:white; padding:6px; display:inline-block;" />
           </div>
           
           <div id="logoDragDrop" class="logo-drag-drop" style="margin-bottom:20px;">
@@ -198,8 +198,8 @@
   </section>
 
   <script>
-    // Force reload logo with cache-busting timestamp
-    document.getElementById('logoImg').src = '/logo-bnn.png?t=' + Date.now();
+    // Force reload logo from database with cache-busting timestamp
+    document.getElementById('logoImg').src = '/api/logo/image?t=' + Date.now();
   </script>
 
   <footer class="footer admin-footer">

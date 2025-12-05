@@ -180,7 +180,9 @@
         if (res.ok) { 
           alert('✅ Logo berhasil diupdate');
           logoForm.reset();
-          logoPreview.src = '/logo-bnn' + (file.name.match(/\.[^.]*$/)?.[0] || '.svg') + '?' + Date.now();
+          // Reload logo from database with cache-busting
+          logoPreview.src = '/api/logo/image?t=' + Date.now();
+          document.getElementById('logoImg').src = '/api/logo/image?t=' + Date.now();
         } else { 
           alert('❌ Upload gagal: ' + (result.error || 'Unknown error')); 
         }
