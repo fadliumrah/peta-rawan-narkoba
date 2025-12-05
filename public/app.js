@@ -251,7 +251,7 @@
       return `
         <div class="news-card" onclick="openNewsModal(${news.id})">
           ${news.image_data ? 
-            `<img src="${news.image_data}" alt="${news.title}" class="news-card-image" />` : 
+            `<img src="/api/news/${news.id}/image" alt="${news.title}" class="news-card-image" />` : 
             '<div class="news-card-image" style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); display:flex; align-items:center; justify-content:center; color:white; font-size:3rem;">📰</div>'
           }
           <div class="news-card-content">
@@ -318,7 +318,7 @@
       </div>
       
       ${news.image_data ? `
-        <img src="${news.image_data}" alt="${news.title}" class="modal-image" />
+        <img src="/api/news/${news.id}/image" alt="${news.title}" class="modal-image" />
         <div class="modal-image-caption">Foto: BNN Kota Tanjungpinang</div>
       ` : ''}
       

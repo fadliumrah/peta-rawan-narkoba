@@ -427,7 +427,7 @@
       emptyState.style.display = 'none';
       newsList.innerHTML = news.map(item => `
         <div class="news-admin-item" data-id="${item.id}">
-          ${item.image_data ? `<img src="${item.image_data}" alt="${item.title}" class="news-admin-thumb" />` : '<div class="news-admin-thumb" style="background:#e5e7eb;"></div>'}
+          ${item.image_data ? `<img src="/api/news/${item.id}/image" alt="${item.title}" class="news-admin-thumb" />` : '<div class="news-admin-thumb" style="background:#e5e7eb;"></div>'}
           <div class="news-admin-info">
             <h4 class="news-admin-title">${item.title}</h4>
             <div class="news-admin-meta">
@@ -516,12 +516,13 @@
       
       // Set image if exists
       if (news.image_data) {
-        newsImageData = news.image_data;
-        newsImagePreview.src = news.image_data;
+        // Image is stored as BLOB, load from endpoint
+        newsImageData = null; // Will keep existing image if not changed
+        newsImagePreview.src = `/api/news/${id}/image`;
         newsImagePreview.style.display = 'block';
         newsImagePlaceholder.style.display = 'none';
         newsImageFileName.style.display = 'block';
-        newsImageFileName.querySelector('span').textContent = 'Gambar saat ini';
+        newsImageFileName.querySelector('span').textContent = 'Gambar saat ini (tidak akan diubah jika tidak upload baru)';
       }
       
       // Set editing mode
