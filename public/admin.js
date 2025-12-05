@@ -1,5 +1,22 @@
 // Admin UI: upload banner, manual add points, list & delete
 (function(){
+  // Common date formatting patterns
+  const DATE_FORMAT_FULL = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  
+  const DATE_FORMAT_SHORT = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  
   // Utility function to format date/time in WIB (UTC+7)
   function formatDateWIB(dateString, options = {}) {
     // SQLite returns timestamps in format "YYYY-MM-DD HH:MM:SS" which is in UTC
@@ -309,13 +326,7 @@
       emptyState.style.display = 'none';
       pts.forEach((p, idx) => {
         const li = document.createElement('li');
-        const date = formatDateWIB(p.created_at, { 
-          year: 'numeric', 
-          month: 'short', 
-          day: 'numeric',
-          hour:'2-digit', 
-          minute:'2-digit' 
-        });
+        const date = formatDateWIB(p.created_at, DATE_FORMAT_SHORT);
         
         // Category emoji mapping
         const categoryEmoji = { rendah: '🟢', sedang: '🟡', tinggi: '🔴' };
@@ -447,13 +458,7 @@
       
       emptyState.style.display = 'none';
       newsList.innerHTML = news.map(item => {
-        const formattedDate = formatDateWIB(item.created_at, {
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
+        const formattedDate = formatDateWIB(item.created_at, DATE_FORMAT_FULL);
         
         return `
           <div class="news-admin-item" data-id="${item.id}">

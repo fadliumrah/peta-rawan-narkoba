@@ -1,5 +1,32 @@
 // User map: load banner, draw points colored by risk category (rendah/sedang/tinggi)
 (function(){
+  // Common date formatting patterns
+  const DATE_FORMAT_FULL = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  };
+  
+  const DATE_FORMAT_WITH_TIME = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  
+  const DATE_FORMAT_LONG = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  };
+  
+  const TIME_FORMAT = {
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  
   // Utility function to format date/time in WIB (UTC+7)
   function formatDateWIB(dateString, options = {}) {
     // SQLite returns timestamps in format "YYYY-MM-DD HH:MM:SS" which is in UTC
@@ -186,7 +213,7 @@
             </div>
             ${p.description ? `<div style="margin-bottom:6px;"><strong>📝 Keterangan:</strong><br/>${p.description}</div>` : ''}
             <div style="color:#999; font-size:0.85rem; margin-top:8px;">
-              <small>🕐 ${formatDateWIB(p.created_at, { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })} WIB</small>
+              <small>🕐 ${formatDateWIB(p.created_at, DATE_FORMAT_WITH_TIME)} WIB</small>
             </div>
           </div>
         `;
@@ -272,7 +299,7 @@
           <div class="news-card-content">
             <h3 class="news-card-title">${news.title}</h3>
             <div class="news-card-meta">
-              <span>📅 ${formatDateWIB(news.created_at, {year: 'numeric', month: 'long', day: 'numeric'})}</span>
+              <span>📅 ${formatDateWIB(news.created_at, DATE_FORMAT_FULL)}</span>
               <span>👤 ${news.author}</span>
             </div>
             <p class="news-card-excerpt">${plainText}</p>
@@ -297,18 +324,8 @@
     const modal = document.getElementById('newsModal');
     const modalBody = document.getElementById('newsModalBody');
     
-    const formattedDate = formatDateWIB(news.created_at, {
-      timeZone: 'Asia/Jakarta',
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric'
-    });
-    const formattedTime = formatDateWIB(news.created_at, {
-      timeZone: 'Asia/Jakarta',
-      hour: '2-digit', 
-      minute: '2-digit'
-    });
+    const formattedDate = formatDateWIB(news.created_at, DATE_FORMAT_LONG);
+    const formattedTime = formatDateWIB(news.created_at, TIME_FORMAT);
     
     // Build unique share URLs for this news article
     const baseUrl = window.location.origin + window.location.pathname;
