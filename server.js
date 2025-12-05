@@ -357,9 +357,6 @@ app.delete('/api/news/:id', basicAuth, (req, res) => {
   }
 });
 
-// API: upload kelurahan GeoJSON (admin)
-// (GeoJSON upload endpoint removed - upload via admin UI disabled)
-
 // serve demo GeoJSON data
 app.get('/data/kelurahan.geojson', (req, res) => {
   const geoPath = path.join(PUBLIC_DIR, 'data', 'kelurahan.geojson');
@@ -368,11 +365,6 @@ app.get('/data/kelurahan.geojson', (req, res) => {
   } else {
     res.status(404).json({ error: 'geojson not found' });
   }
-});
-
-// Expose minimal runtime config for frontend (e.g., Google Maps API key)
-app.get('/api/config', (req, res) => {
-  res.json({ GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || '' });
 });
 
 // Health check endpoint for Railway
@@ -384,8 +376,6 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
-
-// (kelurahan upload endpoint removed)
 
 // Start server - listen on 0.0.0.0 for Railway/Docker compatibility
 const HOST = process.env.HOST || '0.0.0.0';

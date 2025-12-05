@@ -53,38 +53,6 @@
     document.querySelector('#pointForm [name=lat]').value = e.latlng.lat.toFixed(6);
     document.querySelector('#pointForm [name=lng]').value = e.latlng.lng.toFixed(6);
   });
-  
-  function loadAdminBaseMap(){
-    // Map functionality disabled
-    return;
-    fetch('/api/config').then(r=>r.json()).then(cfg=>{
-      const key = cfg && cfg.GOOGLE_MAPS_API_KEY;
-      if (key) {
-        window._initGoogleMapsAdmin = function(){
-          const s = document.createElement('script');
-          s.src = 'https://unpkg.com/leaflet.gridlayer.googlemutant/Leaflet.GoogleMutant.js';
-          s.onload = function(){
-            try{
-              const gm = L.gridLayer.googleMutant({ type: 'roadmap' });
-              gm.addTo(map);
-            }catch(e){
-              L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution: '&copy; OpenStreetMap contributors &amp; CARTO', subdomains:'abcd' }).addTo(map);
-            }
-          };
-          document.head.appendChild(s);
-        };
-        const g = document.createElement('script');
-        g.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&callback=_initGoogleMapsAdmin`;
-        g.async = true; g.defer = true;
-        document.head.appendChild(g);
-      } else {
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution: '&copy; OpenStreetMap contributors &amp; CARTO', subdomains:'abcd' }).addTo(map);
-      }
-    }).catch(()=>{
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution: '&copy; OpenStreetMap contributors &amp; CARTO', subdomains:'abcd' }).addTo(map);
-    });
-  }
-  // Map disabled - admin panel simplified without interactive map
 
   // GPS Geolocation handler
   const gpsBtn = document.getElementById('gpsBtn');
@@ -350,13 +318,8 @@
         ul.appendChild(li);
       });
     }
-    // (approximate admin boundaries removed)
   }
   loadPoints();
-
-  // (Export GeoJSON button functionality removed per user request)
-
-  // (Bulk assign, GeoJSON upload and auto-tag features removed per request)
 
   // form add point
   document.getElementById('pointForm').addEventListener('submit', async (ev)=>{
