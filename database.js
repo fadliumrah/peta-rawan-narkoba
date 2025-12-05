@@ -79,6 +79,14 @@ function initializeDatabase() {
     )
   `);
 
+  // Create indices for better query performance
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_points_category ON points(category);
+    CREATE INDEX IF NOT EXISTS idx_points_created_at ON points(created_at);
+    CREATE INDEX IF NOT EXISTS idx_news_created_at ON news(created_at);
+    CREATE INDEX IF NOT EXISTS idx_news_author ON news(author);
+  `);
+
   console.log('✅ Database initialized successfully');
 }
 
@@ -88,7 +96,6 @@ initializeDatabase();
 // Migrate existing data from JSON files (run once)
 function migrateExistingData() {
   const pointsFile = path.join(DATA_DIR, 'points.json');
-  const bannerFile = path.join(DATA_DIR, 'banner.json');
 
   // Migrate points
   if (fs.existsSync(pointsFile)) {
