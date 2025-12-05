@@ -8,7 +8,7 @@
   <meta http-equiv="Expires" content="0" />
   <title>Peta Rawan Narkoba - Tanjungpinang</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="/styles.css?v=4.2" />
+  <link rel="stylesheet" href="/styles.css?v=5.0" />
 </head>
 <body>
   <nav class="top-nav">
@@ -31,7 +31,30 @@
   </header>
 
   <main>
-    <div id="map" style="height:600px; margin-top:30px;"></div>
+    <!-- News Section -->
+    <section class="news-section">
+      <h2 class="section-title">📰 Berita & Informasi Terkini</h2>
+      
+      <!-- Search Bar -->
+      <div class="news-search-container">
+        <input type="text" id="newsSearchInput" placeholder="🔍 Cari berita..." class="news-search-input" />
+      </div>
+
+      <!-- News Grid -->
+      <div id="newsGrid" class="news-grid"></div>
+      
+      <!-- Show More Button -->
+      <div style="text-align:center; margin-top:30px;">
+        <button id="showMoreNews" class="btn btn-primary" style="display:none;">📄 Lihat Berita Lainnya</button>
+      </div>
+
+      <!-- Empty State -->
+      <div id="newsEmptyState" class="empty-state" style="display:none;">
+        <p>Belum ada berita yang tersedia.</p>
+      </div>
+    </section>
+
+    <div id="map" style="height:600px; margin-top:50px;"></div>
   </main>
 
   <script>
@@ -51,6 +74,6 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="/app.js?v=4.2"></script>
+  <script src="/app.js?v=5.0"></script>
 </body>
 </html>

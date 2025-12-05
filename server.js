@@ -198,6 +198,89 @@ app.post('/api/logo', basicAuth, (req, res) => {
   }
 });
 
+// ===== NEWS API ENDPOINTS =====
+
+// Get all news
+app.get('/api/news', (req, res) => {
+  try {
+    const news = db.getAllNews();
+    res.json(news);
+  } catch (err) {
+    console.error('Error fetching news:', err);
+    res.status(500).json({ error: 'Failed to fetch news' });
+  }
+});
+
+// Search news
+app.get('/api/news/search', (req, res) => {
+  try {
+    const query = req.query.q || '';
+    if (!query) {
+      return res.json([]);
+    }
+    const results = db.searchNews(query);
+    res.json(results);
+  } catch (err) {
+    console.error('Error searching news:', err);
+    res.status(500).json({ error: 'Failed to search news' });
+  }
+});
+
+// Get single news by ID
+app.get('/api/news/:id', (req, res) => {
+  try {
+    const news = db.getNewsById(req.params.id);
+    if (!news) {
+      return res.status(404).json({ error: 'News not found' });
+    }
+    res.json(news);
+  } catch (err) {
+    console.error('Error fetching news:', err);
+    res.status(500).json({ error: 'Failed to fetch news' });
+  }
+});
+
+// Create news (admin only)
+app.post('/api/news', basicAuth, (req, res) => {
+  try {
+    const { title, content, image_data, author } = req.body;
+    if (!title || !content || !author) {
+      return res.status(400).json({ error: 'Title, content, and author are required' });
+    }
+    const result = db.createNews(title, content, image_data || null, author);
+    res.json({ ok: true, id: result.lastInsertRowid });
+  } catch (err) {
+    console.error('Error creating news:', err);
+    res.status(500).json({ error: 'Failed to create news' });
+  }
+});
+
+// Update news (admin only)
+app.put('/api/news/:id', basicAuth, (req, res) => {
+  try {
+    const { title, content, image_data, author } = req.body;
+    if (!title || !content || !author) {
+      return res.status(400).json({ error: 'Title, content, and author are required' });
+    }
+    db.updateNews(req.params.id, title, content, image_data || null, author);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error updating news:', err);
+    res.status(500).json({ error: 'Failed to update news' });
+  }
+});
+
+// Delete news (admin only)
+app.delete('/api/news/:id', basicAuth, (req, res) => {
+  try {
+    db.deleteNews(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error deleting news:', err);
+    res.status(500).json({ error: 'Failed to delete news' });
+  }
+});
+
 // API: upload kelurahan GeoJSON (admin)
 // (GeoJSON upload endpoint removed - upload via admin UI disabled)
 

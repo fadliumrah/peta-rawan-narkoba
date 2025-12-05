@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin - Peta Rawan Narkoba</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="/styles.css?v=4.2" />
+  <link rel="stylesheet" href="/styles.css?v=5.0" />
 </head>
 <body>
   <nav class="top-nav admin-nav">
@@ -69,6 +69,56 @@
           
           <button type="submit" class="btn btn-danger" style="width:100%;">🖼️ Upload Logo</button>
         </form>
+      </div>
+
+      <!-- News Section -->
+      <div class="admin-card full-width">
+        <h2 class="card-title">📰 Kelola Berita</h2>
+        <div class="card-content">
+          <form id="newsForm" class="form-group" style="width:100%; max-width:800px;">
+            <div style="margin-bottom:20px; text-align:center;">
+              <label style="display:block; font-weight:600; margin-bottom:8px; color:#374151; text-align:center;">Preview Foto Berita:</label>
+              <div style="border:2px dashed #e5e7eb; border-radius:10px; padding:10px; background:#f9fafb; min-height:200px; display:flex; align-items:center; justify-content:center;">
+                <img id="newsImagePreview" src="" alt="Preview" style="max-width:100%; max-height:300px; border-radius:8px; display:none;" />
+                <p id="newsImagePlaceholder" style="margin:0; color:#9ca3af; font-size:0.9rem;">Belum ada foto dipilih</p>
+              </div>
+            </div>
+            
+            <div class="file-input-wrapper" style="text-align:center; margin-bottom:20px;">
+              <input type="file" id="newsImageInput" name="newsImage" accept="image/*" style="display:none;" />
+              <label for="newsImageInput" class="file-label" style="cursor:pointer;">
+                <span>📷 Pilih Foto Berita</span>
+              </label>
+              <p id="newsImageFileName" style="margin:8px 0 0 0; font-size:0.85rem; color:#059669; font-weight:600; display:none;">✅ <span></span></p>
+            </div>
+            
+            <div class="form-field">
+              <label>Judul Berita:</label>
+              <input type="text" id="newsTitle" name="title" placeholder="Masukkan judul berita..." required />
+            </div>
+            
+            <div class="form-field">
+              <label>Nama Admin:</label>
+              <input type="text" id="newsAuthor" name="author" placeholder="Nama admin yang upload..." required />
+            </div>
+            
+            <div class="form-field">
+              <label>Isi Berita:</label>
+              <textarea id="newsContent" name="content" placeholder="Tulis isi berita..." rows="6" required></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-danger" style="width:100%; margin-top:20px;">📤 Upload Berita</button>
+          </form>
+
+          <!-- News List -->
+          <div style="margin-top:40px; width:100%;">
+            <h3 style="text-align:center; color:#374151; margin-bottom:20px;">📋 Daftar Berita</h3>
+            <div id="newsList" class="news-admin-list"></div>
+            <div id="newsEmptyState" class="empty-state">
+              <p>Belum ada berita yang diposting.</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Point Form Section -->
@@ -154,6 +204,6 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="/admin.js?v=4.2"></script>
+  <script src="/admin.js?v=5.0"></script>
 </body>
 </html>

@@ -54,6 +54,19 @@ function initializeDatabase() {
     )
   `);
 
+  // Create news table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS news (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      image_data TEXT,
+      author TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   console.log('✅ Database initialized successfully');
 }
 
@@ -263,5 +276,43 @@ module.exports = {
         image_data = excluded.image_data,
         updated_at = CURRENT_TIMESTAMP
     `).run(imageData);
+  },
+
+  // News operations
+  getAllNews: () => {
+    return db.prepare('SELECT * FROM news ORDER BY created_at DESC').all();
+  },
+
+  getNewsById: (id) => {
+    return db.prepare('SELECT * FROM news WHERE id = ?').get(id);
+  },
+
+  searchNews: (query) => {
+    const searchPattern = `%${query}%`;
+    return db.prepare(`
+      SELECT * FROM news 
+      WHERE title LIKE ? OR content LIKE ? OR author LIKE ?
+      ORDER BY created_at DESC
+    `).all(searchPattern, searchPattern, searchPattern);
+  },
+
+  createNews: (title, content, imageData, author) => {
+    return db.prepare(`
+      INSERT INTO news (title, content, image_data, author)
+      VALUES (?, ?, ?, ?)
+    `).run(title, content, imageData, author);
+  },
+
+  updateNews: (id, title, content, imageData, author) => {
+    return db.prepare(`
+      UPDATE news 
+      SET title = ?, content = ?, image_data = ?, author = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(title, content, imageData, author, id);
+  },
+
+  deleteNews: (id) => {
+    return db.prepare('DELETE FROM news WHERE id = ?').run(id);
   }
 };

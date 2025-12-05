@@ -140,6 +140,43 @@ main { padding:30px 40px; max-width:1400px; margin:0 auto; position:relative; z-
 .empty-state { text-align:center; padding:40px 20px; color:#999; }
 .empty-state p { margin:0; font-size:0.95rem; }
 
+/* News Section - Modern Design */
+.news-section { padding:40px 20px; max-width:1400px; margin:0 auto; }
+.section-title { text-align:center; font-size:2rem; color:#1f2937; margin-bottom:30px; font-weight:700; }
+
+/* News Search */
+.news-search-container { max-width:600px; margin:0 auto 40px auto; }
+.news-search-input { width:100%; padding:14px 20px; border:2px solid #e5e7eb; border-radius:12px; font-size:1rem; transition:all 0.3s; background:#f9fafb; }
+.news-search-input:focus { outline:none; border-color:#3b82f6; background:white; box-shadow:0 0 0 3px rgba(59,130,246,0.1); }
+
+/* News Grid */
+.news-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(350px, 1fr)); gap:30px; margin-bottom:20px; }
+
+/* News Card */
+.news-card { background:white; border-radius:16px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08); transition:all 0.3s; border:1px solid #e5e7eb; cursor:pointer; }
+.news-card:hover { transform:translateY(-4px); box-shadow:0 8px 24px rgba(0,0,0,0.12); }
+.news-card-image { width:100%; height:220px; object-fit:cover; background:#f3f4f6; }
+.news-card-content { padding:20px; }
+.news-card-title { font-size:1.15rem; font-weight:700; color:#1f2937; margin:0 0 12px 0; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.news-card-meta { display:flex; gap:16px; margin-bottom:12px; font-size:0.85rem; color:#6b7280; flex-wrap:wrap; }
+.news-card-meta span { display:flex; align-items:center; gap:4px; }
+.news-card-excerpt { color:#4b5563; font-size:0.95rem; line-height:1.6; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+
+/* News Admin List */
+.news-admin-list { display:flex; flex-direction:column; gap:16px; max-width:900px; margin:0 auto; }
+.news-admin-item { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:16px; display:flex; gap:16px; align-items:flex-start; transition:all 0.3s; }
+.news-admin-item:hover { background:#f3f4f6; }
+.news-admin-thumb { width:120px; height:80px; object-fit:cover; border-radius:8px; background:#e5e7eb; flex-shrink:0; }
+.news-admin-info { flex:1; }
+.news-admin-title { font-weight:600; color:#1f2937; margin:0 0 8px 0; font-size:1rem; }
+.news-admin-meta { font-size:0.85rem; color:#6b7280; margin-bottom:8px; }
+.news-admin-actions { display:flex; gap:8px; margin-top:8px; }
+.news-admin-actions button { padding:6px 12px; font-size:0.85rem; border-radius:6px; border:none; cursor:pointer; transition:all 0.3s; }
+.news-admin-actions .btn-edit { background:#3b82f6; color:white; }
+.news-admin-actions .btn-edit:hover { background:#2563eb; }
+.news-admin-actions .btn-delete { background:#ef4444; color:white; }
+.news-admin-actions .btn-delete:hover { background:#dc2626; }
+
 /* Footer - Official BNN Modern Theme */
 .footer { background:linear-gradient(135deg, #002855 0%, #003d82 50%, #0052b4 100%); color:white; padding:32px 0; margin-top:50px; text-align:center; border-top:3px solid #ffd700; box-shadow:0 -4px 16px rgba(0,40,85,0.3); }
 .footer-container { max-width:1400px; margin:0 auto; padding:0 40px; }

@@ -209,4 +209,93 @@
   // Load points initially and poll every 30 seconds
   loadPoints();
   setInterval(loadPoints, 30000);
+
+  // ===== NEWS SECTION =====
+  
+  let allNews = [];
+  let displayedCount = 6;
+  let currentSearchQuery = '';
+
+  // Load news from API
+  async function loadNews() {
+    try {
+      const res = await fetch('/api/news');
+      allNews = await res.json();
+      displayNews();
+    } catch (err) {
+      console.error('Error loading news:', err);
+      document.getElementById('newsEmptyState').style.display = 'block';
+    }
+  }
+
+  // Display news based on current filters
+  function displayNews() {
+    const newsGrid = document.getElementById('newsGrid');
+    const emptyState = document.getElementById('newsEmptyState');
+    const showMoreBtn = document.getElementById('showMoreNews');
+    
+    let newsToDisplay = currentSearchQuery ? 
+      allNews.filter(n => 
+        n.title.toLowerCase().includes(currentSearchQuery.toLowerCase()) ||
+        n.content.toLowerCase().includes(currentSearchQuery.toLowerCase()) ||
+        n.author.toLowerCase().includes(currentSearchQuery.toLowerCase())
+      ) : allNews;
+    
+    if (newsToDisplay.length === 0) {
+      newsGrid.innerHTML = '';
+      emptyState.style.display = 'block';
+      showMoreBtn.style.display = 'none';
+      return;
+    }
+    
+    emptyState.style.display = 'none';
+    
+    const newsToShow = newsToDisplay.slice(0, displayedCount);
+    
+    newsGrid.innerHTML = newsToShow.map(news => `
+      <div class="news-card">
+        ${news.image_data ? 
+          `<img src="${news.image_data}" alt="${news.title}" class="news-card-image" />` : 
+          '<div class="news-card-image" style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); display:flex; align-items:center; justify-content:center; color:white; font-size:3rem;">📰</div>'
+        }
+        <div class="news-card-content">
+          <h3 class="news-card-title">${news.title}</h3>
+          <div class="news-card-meta">
+            <span>📅 ${new Date(news.created_at).toLocaleDateString('id-ID', {year: 'numeric', month: 'long', day: 'numeric'})}</span>
+            <span>👤 ${news.author}</span>
+          </div>
+          <p class="news-card-excerpt">${news.content}</p>
+        </div>
+      </div>
+    `).join('');
+    
+    // Show/hide "Show More" button
+    if (newsToDisplay.length > displayedCount) {
+      showMoreBtn.style.display = 'inline-block';
+    } else {
+      showMoreBtn.style.display = 'none';
+    }
+  }
+
+  // Search news
+  const searchInput = document.getElementById('newsSearchInput');
+  let searchTimeout;
+  searchInput.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      currentSearchQuery = e.target.value.trim();
+      displayedCount = 6; // Reset to initial count
+      displayNews();
+    }, 300);
+  });
+
+  // Show more button
+  document.getElementById('showMoreNews').addEventListener('click', () => {
+    displayedCount += 6;
+    displayNews();
+  });
+
+  // Load news on page load
+  loadNews();
+
 })();

@@ -349,4 +349,129 @@
     }
   });
 
+  // ===== NEWS MANAGEMENT =====
+  
+  // News image preview
+  const newsImageInput = document.getElementById('newsImageInput');
+  const newsImagePreview = document.getElementById('newsImagePreview');
+  const newsImagePlaceholder = document.getElementById('newsImagePlaceholder');
+  const newsImageFileName = document.getElementById('newsImageFileName');
+  let newsImageData = null;
+
+  newsImageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      newsImageFileName.style.display = 'block';
+      newsImageFileName.querySelector('span').textContent = file.name;
+      
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        newsImageData = ev.target.result;
+        newsImagePreview.src = newsImageData;
+        newsImagePreview.style.display = 'block';
+        newsImagePlaceholder.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Load news list
+  async function loadNewsList() {
+    try {
+      const res = await fetch('/api/news');
+      const news = await res.json();
+      const newsList = document.getElementById('newsList');
+      const emptyState = document.getElementById('newsEmptyState');
+      
+      if (news.length === 0) {
+        newsList.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      newsList.innerHTML = news.map(item => `
+        <div class="news-admin-item" data-id="${item.id}">
+          ${item.image_data ? `<img src="${item.image_data}" alt="${item.title}" class="news-admin-thumb" />` : '<div class="news-admin-thumb" style="background:#e5e7eb;"></div>'}
+          <div class="news-admin-info">
+            <h4 class="news-admin-title">${item.title}</h4>
+            <div class="news-admin-meta">
+              📅 ${new Date(item.created_at).toLocaleDateString('id-ID', {year: 'numeric', month: 'long', day: 'numeric'})} | 
+              👤 ${item.author}
+            </div>
+            <p style="color:#6b7280; font-size:0.9rem; margin:0;">${item.content.substring(0, 100)}...</p>
+            <div class="news-admin-actions">
+              <button class="btn-delete" onclick="deleteNews(${item.id})">🗑️ Hapus</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } catch (err) {
+      console.error('Error loading news:', err);
+    }
+  }
+
+  // Submit news form
+  document.getElementById('newsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const title = document.getElementById('newsTitle').value;
+    const author = document.getElementById('newsAuthor').value;
+    const content = document.getElementById('newsContent').value;
+    
+    if (!title || !author || !content) {
+      alert('Semua field wajib diisi!');
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/news', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          author,
+          content,
+          image_data: newsImageData
+        })
+      });
+      
+      if (res.ok) {
+        alert('✅ Berita berhasil diposting!');
+        e.target.reset();
+        newsImageData = null;
+        newsImagePreview.style.display = 'none';
+        newsImagePlaceholder.style.display = 'block';
+        newsImageFileName.style.display = 'none';
+        loadNewsList();
+      } else {
+        alert('❌ Gagal memposting berita');
+      }
+    } catch (err) {
+      console.error('Error posting news:', err);
+      alert('❌ Terjadi kesalahan saat memposting berita');
+    }
+  });
+
+  // Delete news function
+  window.deleteNews = async (id) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus berita ini?')) return;
+    
+    try {
+      const res = await fetch(`/api/news/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        alert('✅ Berita berhasil dihapus');
+        loadNewsList();
+      } else {
+        alert('❌ Gagal menghapus berita');
+      }
+    } catch (err) {
+      console.error('Error deleting news:', err);
+      alert('❌ Terjadi kesalahan saat menghapus berita');
+    }
+  };
+
+  // Load news on page load
+  loadNewsList();
+
 })();
