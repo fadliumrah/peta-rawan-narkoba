@@ -25,14 +25,23 @@ app.use(cors()); // Enable CORS for API endpoints
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Apply auth rate limiting to admin paths before authentication check
+app.use((req, res, next) => {
+  const p = req.path || '';
+  if (p === '/admin.html' || p === '/admin' || p.startsWith('/admin/')) {
+    return authLimiter(req, res, next);
+  }
+  return next();
+});
+
 // Protect admin routes with Basic Auth
 app.use(requireAuthForPath);
 
 // Serve public static files
 app.use(express.static(PUBLIC_DIR));
 
-// Route /admin to /admin.html (clean URL)
-app.get('/admin', (req, res) => {
+// Route /admin to /admin.html (clean URL) - with auth rate limiting
+app.get('/admin', authLimiter, (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'admin.html'));
 });
 
