@@ -219,13 +219,15 @@ main { padding:30px 40px; max-width:1400px; margin:0 auto; position:relative; z-
 .modal-body iframe { max-width:100%; margin:24px 0; border-radius:8px; display:block; }
 .modal-social { display:flex; gap:12px; align-items:center; padding:20px 0; margin:30px 0; border-top:1px solid #e0e0e0; border-bottom:1px solid #e0e0e0; }
 .modal-social-label { font-weight:700; color:#666; font-size:0.95rem; }
-.modal-social-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:6px; font-size:0.9rem; font-weight:600; cursor:pointer; transition:all 0.3s; text-decoration:none; }
+.modal-social-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:6px; font-size:0.9rem; font-weight:600; cursor:pointer; transition:all 0.3s; text-decoration:none; border:none; }
 .modal-social-fb { background:#1877f2; color:white; }
-.modal-social-fb:hover { background:#0d65d9; }
+.modal-social-fb:hover { background:#0d65d9; transform:translateY(-2px); }
 .modal-social-tw { background:#1da1f2; color:white; }
-.modal-social-tw:hover { background:#0c90e0; }
+.modal-social-tw:hover { background:#0c90e0; transform:translateY(-2px); }
 .modal-social-wa { background:#25d366; color:white; }
-.modal-social-wa:hover { background:#1ebd56; }
+.modal-social-wa:hover { background:#1ebd56; transform:translateY(-2px); }
+.modal-social-copy { background:#6b7280; color:white; }
+.modal-social-copy:hover { background:#4b5563; transform:translateY(-2px); }
 
 /* Quill Editor Styling - Professional */
 .ql-container { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:1rem; border-radius:0 0 8px 8px; }

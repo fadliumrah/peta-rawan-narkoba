@@ -227,6 +227,7 @@
       const res = await fetch('/api/news');
       allNews = await res.json();
       displayNews();
+      checkUrlParameter(); // Auto-open news from URL parameter
     } catch (err) {
       console.error('Error loading news:', err);
       document.getElementById('newsEmptyState').style.display = 'block';
@@ -309,12 +310,17 @@
       minute: '2-digit'
     });
     
-    // Build share URLs
-    const pageUrl = encodeURIComponent(window.location.href);
-    const newsTitle = encodeURIComponent(news.title);
-    const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${pageUrl}`;
-    const twShareUrl = `https://twitter.com/intent/tweet?text=${newsTitle}&url=${pageUrl}`;
-    const waShareUrl = `https://wa.me/?text=${newsTitle}%20${pageUrl}`;
+    // Build unique share URLs for this news article
+    const baseUrl = window.location.origin + window.location.pathname;
+    const newsUrl = `${baseUrl}?news=${news.id}`;
+    const shareUrl = encodeURIComponent(newsUrl);
+    const shareTitle = encodeURIComponent(news.title);
+    const shareText = encodeURIComponent(`${news.title} - BNN Kota Tanjungpinang`);
+    
+    const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
+    const twShareUrl = `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`;
+    const waShareUrl = `https://wa.me/?text=${shareText}%20${shareUrl}`;
+    const copyUrl = newsUrl;
     
     modalBody.innerHTML = `
       <div class="modal-header">
@@ -335,18 +341,20 @@
       <div class="modal-body">
         <div class="modal-social">
           <span class="modal-social-label">Bagikan:</span>
-          <a href="${fbShareUrl}" target="_blank" class="modal-social-btn modal-social-fb">📘 Facebook</a>
-          <a href="${twShareUrl}" target="_blank" class="modal-social-btn modal-social-tw">🐦 Twitter</a>
-          <a href="${waShareUrl}" target="_blank" class="modal-social-btn modal-social-wa">💬 WhatsApp</a>
+          <a href="${fbShareUrl}" target="_blank" rel="noopener noreferrer" class="modal-social-btn modal-social-fb">📘 Facebook</a>
+          <a href="${twShareUrl}" target="_blank" rel="noopener noreferrer" class="modal-social-btn modal-social-tw">🐦 Twitter</a>
+          <a href="${waShareUrl}" target="_blank" rel="noopener noreferrer" class="modal-social-btn modal-social-wa">💬 WhatsApp</a>
+          <button onclick="copyNewsLink('${copyUrl}')" class="modal-social-btn modal-social-copy">🔗 Salin Link</button>
         </div>
         
         ${news.content}
         
         <div class="modal-social" style="margin-top:40px;">
           <span class="modal-social-label">Bagikan Artikel Ini:</span>
-          <a href="${fbShareUrl}" target="_blank" class="modal-social-btn modal-social-fb">📘 Facebook</a>
-          <a href="${twShareUrl}" target="_blank" class="modal-social-btn modal-social-tw">🐦 Twitter</a>
-          <a href="${waShareUrl}" target="_blank" class="modal-social-btn modal-social-wa">💬 WhatsApp</a>
+          <a href="${fbShareUrl}" target="_blank" rel="noopener noreferrer" class="modal-social-btn modal-social-fb">📘 Facebook</a>
+          <a href="${twShareUrl}" target="_blank" rel="noopener noreferrer" class="modal-social-btn modal-social-tw">🐦 Twitter</a>
+          <a href="${waShareUrl}" target="_blank" rel="noopener noreferrer" class="modal-social-btn modal-social-wa">💬 WhatsApp</a>
+          <button onclick="copyNewsLink('${copyUrl}')" class="modal-social-btn modal-social-copy">🔗 Salin Link</button>
         </div>
       </div>
     `;
@@ -355,6 +363,47 @@
     document.body.style.overflow = 'hidden';
     window.scrollTo(0, 0);
   };
+
+  // Copy news link function
+  window.copyNewsLink = function(url) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('✅ Link berhasil disalin ke clipboard!');
+      }).catch(() => {
+        fallbackCopyLink(url);
+      });
+    } else {
+      fallbackCopyLink(url);
+    }
+  };
+
+  function fallbackCopyLink(url) {
+    const textarea = document.createElement('textarea');
+    textarea.value = url;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      alert('✅ Link berhasil disalin ke clipboard!');
+    } catch (err) {
+      alert('❌ Gagal menyalin link. Silakan salin manual: ' + url);
+    }
+    document.body.removeChild(textarea);
+  }
+
+  // Auto-open news from URL parameter
+  function checkUrlParameter() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const newsId = urlParams.get('news');
+    if (newsId && allNews && allNews.length > 0) {
+      const news = allNews.find(n => n.id === parseInt(newsId));
+      if (news) {
+        setTimeout(() => openNewsModal(parseInt(newsId)), 500);
+      }
+    }
+  }
 
   // Close modal
   const modal = document.getElementById('newsModal');
