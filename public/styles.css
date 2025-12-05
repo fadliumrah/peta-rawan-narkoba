@@ -29,8 +29,9 @@ main { padding:30px 40px; max-width:1400px; margin:0 auto; position:relative; z-
 
 /* Admin Panel - Clean Modern Layout */
 .admin-panel { padding:30px 20px; max-width:1400px; margin:0 auto; background:#f8f9fa; min-height:calc(100vh - 200px); }
-.admin-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:20px; max-width:1300px; margin:0 auto; }
-.admin-grid .full-width { grid-column:1 / -1; width:100%; max-width:100%; }
+.admin-grid { display:flex; flex-direction:column; align-items:center; gap:20px; max-width:1300px; margin:0 auto; }
+.admin-grid .admin-card { width:100%; max-width:600px; }
+.admin-grid .full-width { width:100%; max-width:1200px; }
 
 /* Admin Cards - Modern Design */
 .admin-card { background:white; border-radius:16px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,0.08); transition:all 0.3s ease; width:100%; border:1px solid #e5e7eb; }
