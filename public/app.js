@@ -148,7 +148,12 @@
       const counts = {};
       
       points.forEach(p=>{
-        const kelurahanName = p.name || 'Tidak Diketahui';
+        // Extract kelurahan name from "Kelurahan XXX" format
+        let kelurahanName = p.name || 'Tidak Diketahui';
+        if (kelurahanName.startsWith('Kelurahan ')) {
+          kelurahanName = kelurahanName.replace('Kelurahan ', '').trim();
+        }
+        
         counts[kelurahanName] = (counts[kelurahanName] || 0) + 1;
         
         // Get color from kelurahan map, default to gray if not found
@@ -164,7 +169,7 @@
         
         const popupContent = `
           <div style="min-width:200px;">
-            <h3 style="margin:0 0 8px 0; font-size:1rem;">${kelurahanName}</h3>
+            <h3 style="margin:0 0 8px 0; font-size:1rem;">Kelurahan ${kelurahanName}</h3>
             <div style="margin-bottom:6px;">
               <strong>📍 Koordinat:</strong><br/>
               ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}
@@ -176,7 +181,7 @@
           </div>
         `;
         m.bindPopup(popupContent);
-        m.bindTooltip(kelurahanName, {direction:'top', offset:[0,-8]});
+        m.bindTooltip(`Kelurahan ${kelurahanName}`, {direction:'top', offset:[0,-8]});
       });
       
       // Update legend counts
