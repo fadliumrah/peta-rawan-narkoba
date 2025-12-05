@@ -1,9 +1,11 @@
-// Admin UI: upload banner, click-to-add points, manual add, list & delete
+// Admin UI: upload banner, manual add points, list & delete
 (function(){
-  // map
-  const map = L.map('adminMap').setView([0.9167, 104.4510], 12);
-  // Choose Google Maps when API key available, else use Voyager
+  // Map removed - not needed for this admin panel
+  // Simplified admin without interactive map selection
+  
   function loadAdminBaseMap(){
+    // Map functionality disabled
+    return;
     fetch('/api/config').then(r=>r.json()).then(cfg=>{
       const key = cfg && cfg.GOOGLE_MAPS_API_KEY;
       if (key) {
@@ -31,18 +33,7 @@
       L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom:19, attribution: '&copy; OpenStreetMap contributors &amp; CARTO', subdomains:'abcd' }).addTo(map);
     });
   }
-  loadAdminBaseMap();
-  // kelurahan boundary display removed per request
-
-  // Kelurahan dropdown removed - using name, category, description instead
-
-  let tempMarker;
-  map.on('click', (e)=>{
-    if (tempMarker) map.removeLayer(tempMarker);
-    tempMarker = L.marker(e.latlng).addTo(map);
-    document.querySelector('#pointForm [name=lat]').value = e.latlng.lat.toFixed(6);
-    document.querySelector('#pointForm [name=lng]').value = e.latlng.lng.toFixed(6);
-  });
+  // Map disabled - admin panel simplified without interactive map
 
   // GPS Geolocation handler
   const gpsBtn = document.getElementById('gpsBtn');
@@ -70,17 +61,9 @@
         document.querySelector('#pointForm [name=lat]').value = lat.toFixed(6);
         document.querySelector('#pointForm [name=lng]').value = lng.toFixed(6);
         
-        // Update map marker
-        if (tempMarker) map.removeLayer(tempMarker);
-        tempMarker = L.marker([lat, lng]).addTo(map);
-        map.setView([lat, lng], 16);
-        
         // Show success message
-        gpsStatusText.innerHTML = `✅ GPS Diperoleh (akurasi: ±${Math.round(accuracy)}m)`;
-        setTimeout(() => {
-          gpsBtn.disabled = false;
-          gpsStatus.style.display = 'none';
-        }, 3000);
+        alert(`✅ GPS Berhasil!\nLatitude: ${lat.toFixed(6)}\nLongitude: ${lng.toFixed(6)}\nAkurasi: ±${Math.round(accuracy)}m`);
+        gpsBtn.disabled = false;
       },
       function(error) {
         let msg = 'Error mengakses GPS';
@@ -89,11 +72,8 @@
           case error.POSITION_UNAVAILABLE: msg = '❌ Informasi lokasi tidak tersedia'; break;
           case error.TIMEOUT: msg = '❌ Request GPS timeout'; break;
         }
-        gpsStatusText.textContent = msg;
-        setTimeout(() => {
-          gpsBtn.disabled = false;
-          gpsStatus.style.display = 'none';
-        }, 3000);
+        alert(msg);
+        gpsBtn.disabled = false;
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
