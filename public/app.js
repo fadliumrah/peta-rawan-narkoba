@@ -197,9 +197,9 @@
         const markerColor = kelurahanColorMap[kelurahanName] || '#999999';
         
         const m = L.circleMarker([p.lat, p.lng], {
-          radius: 6,
+          radius: 3,
           color: '#ffffff',
-          weight: 1.5,
+          weight: 1,
           fillColor: markerColor,
           fillOpacity: 0.9
         }).addTo(markersLayer);
