@@ -1,4 +1,9 @@
 node_modules/
 data/db.sqlite
+data/test-*.db
 public/uploads/
 .env
+coverage/
+playwright-report/
+test-results/
+.playwright/
