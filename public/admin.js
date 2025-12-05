@@ -8,8 +8,10 @@
     subdomains: 'abcd'
   }).addTo(miniMap);
   
-  // Fix map size after load
+  // Fix map size after load - multiple times to ensure proper rendering
   setTimeout(() => miniMap.invalidateSize(), 100);
+  setTimeout(() => miniMap.invalidateSize(), 500);
+  window.addEventListener('resize', () => miniMap.invalidateSize());
   
   // Click handler for coordinate selection
   let tempMarker;
