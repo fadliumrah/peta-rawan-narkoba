@@ -285,18 +285,20 @@
     }
   });
 
+  // Cache DOM elements for points
+  const pointsList = document.getElementById('pointsList');
+  const pointsEmptyState = document.getElementById('emptyState');
+
   // points listing with empty state
   async function loadPoints(){
     const res = await fetch('/api/points');
     const pts = await res.json();
-    const ul = document.getElementById('pointsList');
-    const emptyState = document.getElementById('emptyState');
-    ul.innerHTML = '';
+    pointsList.innerHTML = '';
 
     if (pts.length === 0) {
-      emptyState.style.display = 'block';
+      pointsEmptyState.style.display = 'block';
     } else {
-      emptyState.style.display = 'none';
+      pointsEmptyState.style.display = 'none';
       pts.forEach((p, idx) => {
         const li = document.createElement('li');
         const date = new Date(p.created_at).toLocaleDateString('id-ID', { hour:'2-digit', minute:'2-digit' });
@@ -320,7 +322,7 @@
 
         li.appendChild(infoDiv);
         li.appendChild(delBtn);
-        ul.appendChild(li);
+        pointsList.appendChild(li);
       });
     }
     // (approximate admin boundaries removed)
@@ -415,21 +417,23 @@
     }
   });
 
+  // Cache DOM elements for news
+  const newsList = document.getElementById('newsList');
+  const newsEmptyState = document.getElementById('newsEmptyState');
+
   // Load news list
   async function loadNewsList() {
     try {
       const res = await fetch('/api/news');
       const news = await res.json();
-      const newsList = document.getElementById('newsList');
-      const emptyState = document.getElementById('newsEmptyState');
       
       if (news.length === 0) {
         newsList.innerHTML = '';
-        emptyState.style.display = 'block';
+        newsEmptyState.style.display = 'block';
         return;
       }
       
-      emptyState.style.display = 'none';
+      newsEmptyState.style.display = 'none';
       newsList.innerHTML = news.map(item => `
         <div class="news-admin-item" data-id="${item.id}">
           ${item.image_data ? `<img src="/api/news/${item.id}/image" alt="${item.title}" class="news-admin-thumb" />` : '<div class="news-admin-thumb" style="background:#e5e7eb;"></div>'}
@@ -483,17 +487,11 @@
       if (res.ok) {
         alert(editingNewsId ? '✅ Berita berhasil diupdate!' : '✅ Berita berhasil diposting!');
         
-        // Reset form
-        e.target.reset();
-        quill.setContents([]);
-        newsImageData = null;
-        newsImagePreview.style.display = 'none';
-        newsImagePlaceholder.style.display = 'block';
-        newsImageFileName.style.display = 'none';
-        
-        // Reset edit mode
+        // Reset edit mode if editing
         if (editingNewsId) {
           cancelEdit();
+        } else {
+          resetNewsForm();
         }
         
         loadNewsList();
@@ -561,15 +559,20 @@
     }
   };
   
-  // Cancel edit function
-  function cancelEdit() {
-    editingNewsId = null;
+  // Reset news form helper
+  function resetNewsForm() {
     document.getElementById('newsForm').reset();
     quill.setContents([]);
     newsImageData = null;
     newsImagePreview.style.display = 'none';
     newsImagePlaceholder.style.display = 'block';
     newsImageFileName.style.display = 'none';
+  }
+
+  // Cancel edit function
+  function cancelEdit() {
+    editingNewsId = null;
+    resetNewsForm();
     
     const submitBtn = document.querySelector('#newsForm button[type="submit"]');
     submitBtn.textContent = '📤 Posting Berita';

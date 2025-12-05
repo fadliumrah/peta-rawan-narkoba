@@ -20,6 +20,9 @@ const ADMIN_PASS = process.env.ADMIN_PASS || 'password';
 // Cache base64 image regex pattern for better performance
 const BASE64_IMAGE_REGEX = /^data:(image\/\w+);base64,(.*)$/;
 
+// Valid risk categories
+const VALID_CATEGORIES = ['rendah', 'sedang', 'tinggi'];
+
 // Helper function to send auth required response
 function sendAuthRequired(res) {
   res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
@@ -99,7 +102,7 @@ app.post('/api/points', basicAuth, (req, res) => {
     if (!name || !category) {
       return res.status(400).json({ error: 'name and category required' });
     }
-    if (!['rendah', 'sedang', 'tinggi'].includes(category)) {
+    if (!VALID_CATEGORIES.includes(category)) {
       return res.status(400).json({ error: 'category must be rendah, sedang, or tinggi' });
     }
     
@@ -145,7 +148,7 @@ app.patch('/api/points/:id', basicAuth, (req, res) => {
     const updatedCategory = category !== undefined ? category : point.category;
     const updatedDescription = description !== undefined ? description : point.description;
     
-    if (updatedCategory && !['rendah', 'sedang', 'tinggi'].includes(updatedCategory)) {
+    if (updatedCategory && !VALID_CATEGORIES.includes(updatedCategory)) {
       return res.status(400).json({ error: 'category must be rendah, sedang, or tinggi' });
     }
     
