@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin - Peta Rawan Narkoba</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="/styles.css?v=3.1" />
+  <link rel="stylesheet" href="/styles.css?v=3.2" />
 </head>
 <body>
   <nav class="top-nav admin-nav">
@@ -78,10 +78,10 @@
         <h2 class="card-title">➕ Tambah Titik Rawan Narkoba</h2>
         <form id="pointForm" class="form-group card-content">
           <!-- Mini Map untuk pilih koordinat -->
-          <div style="margin-bottom:20px;">
-            <label style="display:block; font-weight:600; margin-bottom:8px; color:#374151;">Pilih Lokasi pada Peta:</label>
-            <div id="miniMap" style="height:450px; width:100%; border-radius:10px; border:2px solid #e5e7eb; overflow:hidden;"></div>
-            <p style="margin:8px 0 0 0; font-size:0.85rem; color:#6b7280;">💡 Klik pada peta untuk memilih koordinat, atau gunakan tombol GPS</p>
+          <div style="margin-bottom:20px; max-width:100%; margin-left:auto; margin-right:auto;">
+            <label style="display:block; font-weight:600; margin-bottom:12px; color:#374151; text-align:center;">Pilih Lokasi pada Peta:</label>
+            <div id="miniMap" style="height:550px; width:100%; border-radius:12px; border:2px solid #e5e7eb; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
+            <p style="margin:12px 0 0 0; font-size:0.9rem; color:#6b7280; text-align:center;">💡 Klik pada peta untuk memilih koordinat, atau gunakan tombol GPS</p>
           </div>
           
           <button type="button" id="gpsBtn" class="btn btn-primary" style="margin-bottom:15px; width:100%;">📍 Ambil Koordinat dari GPS Saya</button>
@@ -156,6 +156,6 @@
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="/admin.js?v=3.1"></script>
+  <script src="/admin.js?v=3.2"></script>
 </body>
 </html>

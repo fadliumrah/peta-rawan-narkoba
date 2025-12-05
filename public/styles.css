@@ -29,15 +29,16 @@ main { padding:20px 60px; max-width:1200px; margin:0 auto; position:relative; z-
 
 /* Admin Panel - Clean Modern Layout */
 .admin-panel { padding:30px 20px; max-width:1400px; margin:0 auto; background:#f8f9fa; min-height:calc(100vh - 200px); }
-.admin-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:20px; max-width:900px; margin:0 auto; }
-.admin-grid .full-width { grid-column:1 / -1; width:100%; }
+.admin-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:20px; max-width:1100px; margin:0 auto; }
+.admin-grid .full-width { grid-column:1 / -1; width:100%; max-width:100%; }
 
 /* Admin Cards - Modern Design */
 .admin-card { background:white; border-radius:16px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,0.08); transition:all 0.3s ease; width:100%; border:1px solid #e5e7eb; }
+.admin-card.full-width { max-width:100%; }
 .admin-card:hover { transform:translateY(-4px); box-shadow:0 8px 24px rgba(0,0,0,0.12); }
 .card-title { margin:0; padding:16px 20px; color:#1f2937; font-size:1.05rem; font-weight:600; background:#f9fafb; border-bottom:1px solid #e5e7eb; }
 .card-subtitle { margin:0; padding:0 20px; color:#6b7280; font-size:0.9rem; }
-.card-content { background:transparent; box-shadow:none; padding:24px; margin:0; display:flex; flex-direction:column; align-items:flex-start; }
+.card-content { background:transparent; box-shadow:none; padding:28px; margin:0; display:flex; flex-direction:column; align-items:flex-start; }
 
 /* Form row: two columns on desktop */
 .form-row { display:flex; gap:12px; width:100%; }
