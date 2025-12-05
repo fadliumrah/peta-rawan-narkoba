@@ -271,27 +271,35 @@
   document.getElementById('pointForm').addEventListener('submit', async (ev)=>{
     ev.preventDefault();
     const fd = new FormData(ev.target);
+    const kelurahan = fd.get('category');
+    const description = fd.get('description') || '';
+    
+    // Auto-generate name from kelurahan
+    const name = `Kelurahan ${kelurahan}`;
+    
     const payload = { 
-      name: fd.get('name'),
+      name: name,
       lat: Number(fd.get('lat')), 
       lng: Number(fd.get('lng')), 
-      category: fd.get('category'),
-      description: fd.get('description') || null
+      category: kelurahan,
+      description: description
     };
-    if (!payload.name || !payload.category) { 
-      alert('Nama dan kategori wajib diisi.'); 
+    
+    if (!payload.category) { 
+      alert('Kelurahan wajib dipilih.'); 
       return; 
     }
+    
     const res = await fetch('/api/points', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
     if (res.ok) { 
-      alert('Titik berhasil ditambahkan'); 
+      alert('✅ Titik berhasil ditambahkan'); 
       ev.target.reset(); 
-      if (tempMarker){ map.removeLayer(tempMarker); tempMarker=null; } 
+      if (tempMarker){ miniMap.removeLayer(tempMarker); tempMarker=null; } 
       loadPoints(); 
     }
     else {
       const txt = await res.text();
-      alert('Gagal menambahkan titik: ' + txt);
+      alert('❌ Gagal menambahkan titik: ' + txt);
     }
   });
 
