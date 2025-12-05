@@ -40,6 +40,7 @@ main { padding:30px 40px; max-width:1400px; margin:0 auto; position:relative; z-
 .card-title { margin:0; padding:16px 20px; color:#1f2937; font-size:1.05rem; font-weight:600; background:#f9fafb; border-bottom:1px solid #e5e7eb; text-align:center; }
 .card-subtitle { margin:0; padding:0 20px; color:#6b7280; font-size:0.9rem; text-align:center; }
 .card-content { background:transparent; box-shadow:none; padding:28px; margin:0; display:flex; flex-direction:column; align-items:center; width:100%; max-width:600px; margin-left:auto; margin-right:auto; }
+.admin-card.full-width .card-content { max-width:100%; padding:28px 40px; }
 
 /* Form row: two columns on desktop */
 .form-row { display:flex; gap:12px; width:100%; justify-content:center; }
