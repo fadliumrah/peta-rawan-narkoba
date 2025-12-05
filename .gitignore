@@ -1,4 +1,7 @@
 node_modules/
-data/db.sqlite
+# data/*.db - DISABLED: Database needs to be committed for Railway persistence
+# data/*.sqlite
+data/*.db-journal
 public/uploads/
 .env
+*.log
