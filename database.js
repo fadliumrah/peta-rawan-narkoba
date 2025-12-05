@@ -2,13 +2,18 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure data directory exists
-const DATA_DIR = path.join(__dirname, 'data');
+// Use Railway volume mount path if available, otherwise use local data directory
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH 
+  ? path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH, 'database')
+  : path.join(__dirname, 'data');
+
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
+  console.log(`📁 Created data directory: ${DATA_DIR}`);
 }
 
 const DB_PATH = path.join(DATA_DIR, 'peta-narkoba.db');
+console.log(`🗄️  Database path: ${DB_PATH}`);
 const db = new Database(DB_PATH);
 
 // Enable foreign keys
