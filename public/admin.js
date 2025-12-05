@@ -1,5 +1,14 @@
 // Admin UI: upload banner, manual add points, list & delete
 (function(){
+  // Helper function to read file as data URL
+  function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Gagal membaca file'));
+      reader.readAsDataURL(file);
+    });
+  }
   // Initialize mini map for coordinate selection
   const miniMap = L.map('miniMap').setView([0.9167, 104.4510], 12);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -139,12 +148,12 @@
   });
   
   // Preview function
-  function previewLogo(file) {
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      logoPreview.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
+  async function previewLogo(file) {
+    try {
+      logoPreview.src = await readFileAsDataURL(file);
+    } catch (err) {
+      alert('❌ Gagal memuat preview');
+    }
   }
   
   logoForm.addEventListener('submit', async (ev)=>{
@@ -166,34 +175,27 @@
       return;
     }
     
-    const reader = new FileReader();
-    reader.onload = async function(){
-      const dataUrl = reader.result;
+    try {
+      const dataUrl = await readFileAsDataURL(file);
       const payload = { filename: file.name, data: dataUrl };
-      try {
-        const res = await fetch('/api/logo', { 
-          method:'POST', 
-          headers:{ 'Content-Type':'application/json' }, 
-          body: JSON.stringify(payload) 
-        });
-        const result = await res.json();
-        if (res.ok) { 
-          alert('✅ Logo berhasil diupdate');
-          logoForm.reset();
-          // Reload logo from database with cache-busting
-          logoPreview.src = '/api/logo/image?t=' + Date.now();
-          document.getElementById('logoImg').src = '/api/logo/image?t=' + Date.now();
-        } else { 
-          alert('❌ Upload gagal: ' + (result.error || 'Unknown error')); 
-        }
-      } catch (err) {
-        alert('❌ Error: ' + err.message);
+      const res = await fetch('/api/logo', { 
+        method:'POST', 
+        headers:{ 'Content-Type':'application/json' }, 
+        body: JSON.stringify(payload) 
+      });
+      const result = await res.json();
+      if (res.ok) { 
+        alert('✅ Logo berhasil diupdate');
+        logoForm.reset();
+        // Reload logo from database with cache-busting
+        logoPreview.src = '/api/logo/image?t=' + Date.now();
+        document.getElementById('logoImg').src = '/api/logo/image?t=' + Date.now();
+      } else { 
+        alert('❌ Upload gagal: ' + (result.error || 'Unknown error')); 
       }
-    };
-    reader.onerror = function() {
-      alert('❌ Gagal membaca file');
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      alert('❌ Error: ' + err.message);
+    }
   });
 
   // banner form - read file as base64 and send JSON so server doesn't need multipart parser
@@ -227,7 +229,7 @@
   loadBanner();
   
   // File input change handler - show preview and filename
-  fileInput.addEventListener('change', function(e) {
+  fileInput.addEventListener('change', async function(e) {
     const file = e.target.files[0];
     if (file) {
       // Show filename
@@ -235,13 +237,13 @@
       fileName.querySelector('span').textContent = file.name;
       
       // Show preview
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        bannerPreview.src = event.target.result;
+      try {
+        bannerPreview.src = await readFileAsDataURL(file);
         bannerPreview.style.display = 'block';
         bannerPlaceholder.style.display = 'none';
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        alert('❌ Gagal memuat preview');
+      }
     }
   });
   
@@ -250,48 +252,53 @@
     const file = fileInput.files[0];
     const caption = bannerCaptionInput.value || '';
     
-    // If file is provided, upload both image and caption
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = async function(){
-        const dataUrl = reader.result;
-        const payload = { data: dataUrl, caption };
-        const res = await fetch('/api/banner', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
-        if (res.ok) { 
-          alert('✅ Banner berhasil diupdate'); 
-          loadBanner(); // Reload banner
+    try {
+      let payload;
+      
+      // If file is provided, upload both image and caption
+      if (file) {
+        const dataUrl = await readFileAsDataURL(file);
+        payload = { data: dataUrl, caption };
+      } else {
+        // If no file, only update caption
+        payload = { caption };
+      }
+      
+      const res = await fetch('/api/banner', { 
+        method:'POST', 
+        headers:{ 'Content-Type':'application/json' }, 
+        body: JSON.stringify(payload) 
+      });
+      
+      if (res.ok) { 
+        alert(file ? '✅ Banner berhasil diupdate' : '✅ Caption banner berhasil diupdate'); 
+        loadBanner(); // Reload banner
+        if (file) {
           fileName.style.display = 'none';
           fileInput.value = '';
-        } else { 
-          alert('❌ Upload gagal'); 
         }
-      };
-      reader.readAsDataURL(file);
-    } else {
-      // If no file, only update caption
-      const payload = { caption };
-      const res = await fetch('/api/banner', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
-      if (res.ok) { 
-        alert('✅ Caption banner berhasil diupdate'); 
-        loadBanner(); // Reload banner
       } else { 
-        alert('❌ Update gagal'); 
+        alert('❌ Upload gagal'); 
       }
+    } catch (err) {
+      alert('❌ Error: ' + err.message);
     }
   });
+
+  // Cache DOM elements for points
+  const pointsList = document.getElementById('pointsList');
+  const pointsEmptyState = document.getElementById('emptyState');
 
   // points listing with empty state
   async function loadPoints(){
     const res = await fetch('/api/points');
     const pts = await res.json();
-    const ul = document.getElementById('pointsList');
-    const emptyState = document.getElementById('emptyState');
-    ul.innerHTML = '';
+    pointsList.innerHTML = '';
 
     if (pts.length === 0) {
-      emptyState.style.display = 'block';
+      pointsEmptyState.style.display = 'block';
     } else {
-      emptyState.style.display = 'none';
+      pointsEmptyState.style.display = 'none';
       pts.forEach((p, idx) => {
         const li = document.createElement('li');
         const date = new Date(p.created_at).toLocaleDateString('id-ID', { hour:'2-digit', minute:'2-digit' });
@@ -315,7 +322,7 @@
 
         li.appendChild(infoDiv);
         li.appendChild(delBtn);
-        ul.appendChild(li);
+        pointsList.appendChild(li);
       });
     }
     // (approximate admin boundaries removed)
@@ -393,38 +400,40 @@
   const newsImageFileName = document.getElementById('newsImageFileName');
   let newsImageData = null;
 
-  newsImageInput.addEventListener('change', (e) => {
+  newsImageInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (file) {
       newsImageFileName.style.display = 'block';
       newsImageFileName.querySelector('span').textContent = file.name;
       
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        newsImageData = ev.target.result;
+      try {
+        newsImageData = await readFileAsDataURL(file);
         newsImagePreview.src = newsImageData;
         newsImagePreview.style.display = 'block';
         newsImagePlaceholder.style.display = 'none';
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        alert('❌ Gagal memuat preview gambar');
+      }
     }
   });
+
+  // Cache DOM elements for news
+  const newsList = document.getElementById('newsList');
+  const newsEmptyState = document.getElementById('newsEmptyState');
 
   // Load news list
   async function loadNewsList() {
     try {
       const res = await fetch('/api/news');
       const news = await res.json();
-      const newsList = document.getElementById('newsList');
-      const emptyState = document.getElementById('newsEmptyState');
       
       if (news.length === 0) {
         newsList.innerHTML = '';
-        emptyState.style.display = 'block';
+        newsEmptyState.style.display = 'block';
         return;
       }
       
-      emptyState.style.display = 'none';
+      newsEmptyState.style.display = 'none';
       newsList.innerHTML = news.map(item => `
         <div class="news-admin-item" data-id="${item.id}">
           ${item.image_data ? `<img src="/api/news/${item.id}/image" alt="${item.title}" class="news-admin-thumb" />` : '<div class="news-admin-thumb" style="background:#e5e7eb;"></div>'}
@@ -478,17 +487,11 @@
       if (res.ok) {
         alert(editingNewsId ? '✅ Berita berhasil diupdate!' : '✅ Berita berhasil diposting!');
         
-        // Reset form
-        e.target.reset();
-        quill.setContents([]);
-        newsImageData = null;
-        newsImagePreview.style.display = 'none';
-        newsImagePlaceholder.style.display = 'block';
-        newsImageFileName.style.display = 'none';
-        
-        // Reset edit mode
+        // Reset edit mode if editing
         if (editingNewsId) {
           cancelEdit();
+        } else {
+          resetNewsForm();
         }
         
         loadNewsList();
@@ -556,15 +559,20 @@
     }
   };
   
-  // Cancel edit function
-  function cancelEdit() {
-    editingNewsId = null;
+  // Reset news form helper
+  function resetNewsForm() {
     document.getElementById('newsForm').reset();
     quill.setContents([]);
     newsImageData = null;
     newsImagePreview.style.display = 'none';
     newsImagePlaceholder.style.display = 'block';
     newsImageFileName.style.display = 'none';
+  }
+
+  // Cancel edit function
+  function cancelEdit() {
+    editingNewsId = null;
+    resetNewsForm();
     
     const submitBtn = document.querySelector('#newsForm button[type="submit"]');
     submitBtn.textContent = '📤 Posting Berita';

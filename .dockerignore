@@ -1,11 +1,70 @@
+# Dependencies
 node_modules
+
+# Git
 .git
+.github
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Environment
 .env
+.env.*
+
+# Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Documentation - exclude all MD files
+*.md
+README*
+DEPLOY*
+DATABASE*
+RAILWAY*
+SETUP*
+BANNER*
+CHANGELOG*
+
+# Backups
+*.backup
+*.bak
+*.old
+*.tmp
+
+# Python
+*.py
+__pycache__
+*.pyc
+.python-version
+
+# Scripts not needed for deploy
+fetch_osm.py
+check-db.js
+start.sh
+
+# Other config files
+Procfile
+.npmrc
+
+# Data - exclude json backups but keep database
+data/*.json
+data/*.backup
+!data/.gitkeep
+!data/peta-narkoba.db
+
+# Uploads directory
 uploads/*
 !uploads/.gitkeep
-data/*.json
-!data/.gitkeep
-*.backup
-# Keep database file for Railway deployment
-!data/peta-narkoba.db
+
+# Package manager files (not needed, we have package-lock.json)
+yarn.lock
+pnpm-lock.yaml

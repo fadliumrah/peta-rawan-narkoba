@@ -17,25 +17,46 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'password';
 
+// Cache base64 image regex pattern for better performance
+const BASE64_IMAGE_REGEX = /^data:(image\/\w+);base64,(.*)$/;
+
+// Valid risk categories
+const VALID_CATEGORIES = ['rendah', 'sedang', 'tinggi'];
+
+// Helper function to send auth required response
+function sendAuthRequired(res) {
+  res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
+  return res.status(401).send('Authentication required');
+}
+
+// Helper function to extract base64 image data
+function extractBase64ImageData(data) {
+  if (!data) return null;
+  
+  const match = data.match(BASE64_IMAGE_REGEX);
+  const mimeType = match ? match[1] : 'image/png';
+  const b64 = match ? match[2] : data;
+  const buffer = Buffer.from(b64, 'base64');
+  
+  return { buffer, mimeType };
+}
+
 function basicAuth(req, res, next) {
   const auth = req.headers.authorization;
-  if (!auth) {
-    res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
-    return res.status(401).send('Authentication required');
-  }
+  if (!auth) return sendAuthRequired(res);
+  
   const parts = auth.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Basic') {
-    res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
-    return res.status(401).send('Authentication required');
-  }
+  if (parts.length !== 2 || parts[0] !== 'Basic') return sendAuthRequired(res);
+  
   const credentials = Buffer.from(parts[1], 'base64').toString();
   const idx = credentials.indexOf(':');
-  if (idx === -1) return res.status(401).send('Authentication required');
+  if (idx === -1) return sendAuthRequired(res);
+  
   const user = credentials.slice(0, idx);
   const pass = credentials.slice(idx + 1);
   if (user === ADMIN_USER && pass === ADMIN_PASS) return next();
-  res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
-  return res.status(401).send('Authentication required');
+  
+  return sendAuthRequired(res);
 }
 
 // Protect admin routes with Basic Auth
@@ -81,11 +102,18 @@ app.post('/api/points', basicAuth, (req, res) => {
     if (!name || !category) {
       return res.status(400).json({ error: 'name and category required' });
     }
-    if (!['rendah', 'sedang', 'tinggi'].includes(category)) {
+    if (!VALID_CATEGORIES.includes(category)) {
       return res.status(400).json({ error: 'category must be rendah, sedang, or tinggi' });
     }
     
-    const id = db.createPoint(name, Number(lat), Number(lng), category, description || null);
+    // Validate coordinates
+    const numLat = Number(lat);
+    const numLng = Number(lng);
+    if (isNaN(numLat) || isNaN(numLng) || numLat < -90 || numLat > 90 || numLng < -180 || numLng > 180) {
+      return res.status(400).json({ error: 'Invalid coordinates' });
+    }
+    
+    const id = db.createPoint(name, numLat, numLng, category, description || null);
     const point = db.getPointById(id);
     res.json(point);
   } catch (err) {
@@ -120,7 +148,7 @@ app.patch('/api/points/:id', basicAuth, (req, res) => {
     const updatedCategory = category !== undefined ? category : point.category;
     const updatedDescription = description !== undefined ? description : point.description;
     
-    if (updatedCategory && !['rendah', 'sedang', 'tinggi'].includes(updatedCategory)) {
+    if (updatedCategory && !VALID_CATEGORIES.includes(updatedCategory)) {
       return res.status(400).json({ error: 'category must be rendah, sedang, or tinggi' });
     }
     
@@ -141,7 +169,8 @@ app.get('/api/banner/image', (req, res) => {
       return res.status(404).send('Banner not found');
     }
     res.set('Content-Type', banner.mime_type || 'image/svg+xml');
-    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Cache-Control', 'public, max-age=86400, immutable');
+    res.set('ETag', `"banner-${banner.updated_at}"`);
     res.send(banner.image_data);
   } catch (err) {
     console.error('Error serving banner:', err);
@@ -175,14 +204,11 @@ app.post('/api/banner', basicAuth, (req, res) => {
       return res.json({ ok: true, caption });
     }
     
-    // Extract base64 data and mime type
-    const match = data.match(/^data:(image\/\w+);base64,(.*)$/);
-    const mimeType = match ? match[1] : 'image/png';
-    const b64 = match ? match[2] : data;
-    const buffer = Buffer.from(b64, 'base64');
+    // Extract base64 data and mime type using helper
+    const imageData = extractBase64ImageData(data);
     
     // Save to database as BLOB
-    db.updateBanner(buffer, mimeType, caption);
+    db.updateBanner(imageData.buffer, imageData.mimeType, caption);
     console.log('✅ Banner saved to database as BLOB');
     
     res.json({ ok: true, caption });
@@ -200,7 +226,8 @@ app.get('/api/logo/image', (req, res) => {
       return res.status(404).send('Logo not found');
     }
     res.set('Content-Type', logo.mime_type || 'image/png');
-    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Cache-Control', 'public, max-age=86400, immutable');
+    res.set('ETag', `"logo-${logo.updated_at}"`);
     res.send(logo.image_data);
   } catch (err) {
     console.error('Error serving logo:', err);
@@ -214,14 +241,11 @@ app.post('/api/logo', basicAuth, (req, res) => {
     const data = req.body.data; // base64 string possibly with data:... prefix
     if (!data) return res.status(400).json({ error: 'data (base64) required' });
     
-    // Extract base64 data and mime type
-    const match = data.match(/^data:(image\/\w+);base64,(.*)$/);
-    const mimeType = match ? match[1] : 'image/png';
-    const b64 = match ? match[2] : data;
-    const buffer = Buffer.from(b64, 'base64');
+    // Extract base64 data and mime type using helper
+    const imageData = extractBase64ImageData(data);
     
     // Save to database as BLOB
-    db.updateLogo(buffer, mimeType);
+    db.updateLogo(imageData.buffer, imageData.mimeType);
     console.log('✅ Logo saved to database as BLOB');
     
     res.json({ ok: true });
@@ -252,7 +276,8 @@ app.get('/api/news/:id/image', (req, res) => {
       return res.status(404).send('Image not found');
     }
     res.set('Content-Type', news.mime_type || 'image/jpeg');
-    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Cache-Control', 'public, max-age=86400, immutable');
+    res.set('ETag', `"news-${news.id}-${news.updated_at}"`);
     res.send(news.image_data);
   } catch (err) {
     console.error('Error serving news image:', err);
@@ -297,17 +322,10 @@ app.post('/api/news', basicAuth, (req, res) => {
       return res.status(400).json({ error: 'Title, content, and author are required' });
     }
     
-    // Convert base64 image to BLOB if provided
-    let imageBuffer = null;
-    let mimeType = null;
-    if (image_data) {
-      const match = image_data.match(/^data:(image\/\w+);base64,(.*)$/);
-      mimeType = match ? match[1] : 'image/jpeg';
-      const b64 = match ? match[2] : image_data;
-      imageBuffer = Buffer.from(b64, 'base64');
-    }
+    // Convert base64 image to BLOB if provided using helper
+    const imageData = image_data ? extractBase64ImageData(image_data) : { buffer: null, mimeType: null };
     
-    const result = db.createNews(title, content, imageBuffer, mimeType, author);
+    const result = db.createNews(title, content, imageData.buffer, imageData.mimeType, author);
     console.log('✅ News saved to database with BLOB image');
     
     res.json({ ok: true, id: result.lastInsertRowid });
@@ -325,17 +343,10 @@ app.put('/api/news/:id', basicAuth, (req, res) => {
       return res.status(400).json({ error: 'Title, content, and author are required' });
     }
     
-    // Convert base64 image to BLOB if provided
-    let imageBuffer = null;
-    let mimeType = null;
-    if (image_data) {
-      const match = image_data.match(/^data:(image\/\w+);base64,(.*)$/);
-      mimeType = match ? match[1] : 'image/jpeg';
-      const b64 = match ? match[2] : image_data;
-      imageBuffer = Buffer.from(b64, 'base64');
-    }
+    // Convert base64 image to BLOB if provided using helper
+    const imageData = image_data ? extractBase64ImageData(image_data) : { buffer: null, mimeType: null };
     
-    db.updateNews(req.params.id, title, content, imageBuffer, mimeType, author);
+    db.updateNews(req.params.id, title, content, imageData.buffer, imageData.mimeType, author);
     console.log('✅ News updated in database with BLOB image');
     
     res.json({ ok: true });

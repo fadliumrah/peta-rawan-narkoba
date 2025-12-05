@@ -34,6 +34,10 @@ function initializeDatabase() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  
+  // Create indexes for faster queries
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_points_category ON points(category)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_points_created_at ON points(created_at DESC)`);
 
   // Create banner table with BLOB storage
   db.exec(`
@@ -69,6 +73,10 @@ function initializeDatabase() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  
+  // Create indexes for faster search and sorting
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_news_created_at ON news(created_at DESC)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_news_title ON news(title)`);
 
   console.log('✅ Database initialized successfully');
 }
@@ -246,17 +254,27 @@ function seedSampleData() {
 // Seed sample data
 seedSampleData();
 
+// Prepare cached statements for better performance
+const cachedStatements = {
+  getAllPoints: db.prepare('SELECT * FROM points ORDER BY created_at DESC'),
+  getPointById: db.prepare('SELECT * FROM points WHERE id = ?'),
+  getAllNews: db.prepare('SELECT * FROM news ORDER BY created_at DESC'),
+  getNewsById: db.prepare('SELECT * FROM news WHERE id = ?'),
+  getBanner: db.prepare('SELECT * FROM banner WHERE id = 1'),
+  getLogo: db.prepare('SELECT * FROM logo WHERE id = 1')
+};
+
 // Export database instance and helper functions
 module.exports = {
   db,
   
   // Points operations
   getAllPoints: () => {
-    return db.prepare('SELECT * FROM points ORDER BY created_at DESC').all();
+    return cachedStatements.getAllPoints.all();
   },
   
   getPointById: (id) => {
-    return db.prepare('SELECT * FROM points WHERE id = ?').get(id);
+    return cachedStatements.getPointById.get(id);
   },
   
   createPoint: (name, lat, lng, category, description) => {
@@ -282,7 +300,7 @@ module.exports = {
   
   // Banner operations
   getBanner: () => {
-    return db.prepare('SELECT * FROM banner WHERE id = 1').get();
+    return cachedStatements.getBanner.get();
   },
   
   updateBanner: (imageBuffer, mimeType, caption) => {
@@ -310,7 +328,7 @@ module.exports = {
   
   // Logo operations
   getLogo: () => {
-    return db.prepare('SELECT * FROM logo WHERE id = 1').get();
+    return cachedStatements.getLogo.get();
   },
   
   updateLogo: (imageBuffer, mimeType) => {
@@ -326,11 +344,11 @@ module.exports = {
 
   // News operations
   getAllNews: () => {
-    return db.prepare('SELECT * FROM news ORDER BY created_at DESC').all();
+    return cachedStatements.getAllNews.all();
   },
 
   getNewsById: (id) => {
-    return db.prepare('SELECT * FROM news WHERE id = ?').get(id);
+    return cachedStatements.getNewsById.get(id);
   },
 
   searchNews: (query) => {

@@ -139,14 +139,21 @@
 
   // Load points with kelurahan-based colors
   let markersLayer = L.layerGroup().addTo(map);
+  let isLoadingPoints = false;
   
   function loadPoints(){
+    // Prevent overlapping requests
+    if (isLoadingPoints) return;
+    isLoadingPoints = true;
+    
     fetch('/api/points').then(r=>r.json()).then(points=>{
+      // Clear all markers efficiently
       markersLayer.clearLayers();
       
       // Count points per kelurahan
       const counts = {};
       
+      // Batch create markers
       points.forEach(p=>{
         const kelurahanName = p.name || 'Tidak Diketahui';
         counts[kelurahanName] = (counts[kelurahanName] || 0) + 1;
@@ -192,6 +199,8 @@
       }
     }).catch(err => {
       console.error('Failed to load points:', err);
+    }).finally(() => {
+      isLoadingPoints = false;
     });
   }
   
@@ -205,6 +214,11 @@
   let displayedCount = 6;
   let currentSearchQuery = '';
 
+  // Cache DOM elements
+  const newsGrid = document.getElementById('newsGrid');
+  const newsEmptyState = document.getElementById('newsEmptyState');
+  const showMoreNewsBtn = document.getElementById('showMoreNews');
+
   // Load news from API
   async function loadNews() {
     try {
@@ -214,15 +228,12 @@
       checkUrlParameter(); // Auto-open news from URL parameter
     } catch (err) {
       console.error('Error loading news:', err);
-      document.getElementById('newsEmptyState').style.display = 'block';
+      newsEmptyState.style.display = 'block';
     }
   }
 
   // Display news based on current filters
   function displayNews() {
-    const newsGrid = document.getElementById('newsGrid');
-    const emptyState = document.getElementById('newsEmptyState');
-    const showMoreBtn = document.getElementById('showMoreNews');
     
     let newsToDisplay = currentSearchQuery ? 
       allNews.filter(n => 
@@ -233,12 +244,12 @@
     
     if (newsToDisplay.length === 0) {
       newsGrid.innerHTML = '';
-      emptyState.style.display = 'block';
-      showMoreBtn.style.display = 'none';
+      newsEmptyState.style.display = 'block';
+      showMoreNewsBtn.style.display = 'none';
       return;
     }
     
-    emptyState.style.display = 'none';
+    newsEmptyState.style.display = 'none';
     
     const newsToShow = newsToDisplay.slice(0, displayedCount);
     
@@ -268,9 +279,9 @@
     
     // Show/hide "Show More" button
     if (newsToDisplay.length > displayedCount) {
-      showMoreBtn.style.display = 'inline-block';
+      showMoreNewsBtn.style.display = 'inline-block';
     } else {
-      showMoreBtn.style.display = 'none';
+      showMoreNewsBtn.style.display = 'none';
     }
   }
 
@@ -418,7 +429,7 @@
   });
 
   // Show more button
-  document.getElementById('showMoreNews').addEventListener('click', () => {
+  showMoreNewsBtn.addEventListener('click', () => {
     displayedCount += 6;
     displayNews();
   });

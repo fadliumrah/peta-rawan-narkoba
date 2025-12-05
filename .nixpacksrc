@@ -1,0 +1,20 @@
+# Railway Deployment Optimization Settings
+# This file tells Nixpacks to use aggressive caching
+
+# Use exact Node version for better caching
+node_version = "20"
+
+# Skip unnecessary build steps
+skip_phase = "build"
+
+# Optimize npm install
+[install]
+cmd = "npm ci --omit=dev --prefer-offline --no-audit --no-fund --quiet"
+cache = true
+
+[start]
+cmd = "node server.js"
+
+[env]
+NODE_ENV = "production"
+NPM_CONFIG_LOGLEVEL = "error"

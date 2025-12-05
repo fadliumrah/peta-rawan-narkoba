@@ -1,11 +1,10 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "python3"]
+nixPkgs = ["nodejs_20"]
+nixOverlays = []
+nixLibs = []
 
 [phases.install]
-cmds = ["npm ci"]
-
-[phases.build]
-cmds = []
+cmds = ["npm ci --omit=dev --prefer-offline --no-audit --no-fund"]
 
 [start]
 cmd = "node server.js"
