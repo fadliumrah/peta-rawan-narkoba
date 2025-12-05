@@ -1,4 +1,5 @@
 // Authentication middleware
+const crypto = require('crypto');
 
 // Get credentials from environment with defaults
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
@@ -48,16 +49,22 @@ function basicAuth(req, res, next) {
   return res.status(401).send('Authentication required');
 }
 
-// Constant-time string comparison to prevent timing attacks
+// Constant-time string comparison using crypto.timingSafeEqual
 function safeCompare(a, b) {
-  if (a.length !== b.length) return false;
-  
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  try {
+    // Pad to same length to prevent length-based timing leaks
+    const maxLen = Math.max(a.length, b.length);
+    const aBuf = Buffer.alloc(maxLen);
+    const bBuf = Buffer.alloc(maxLen);
+    
+    aBuf.write(a);
+    bBuf.write(b);
+    
+    // crypto.timingSafeEqual requires buffers of same length
+    return crypto.timingSafeEqual(aBuf, bBuf) && a.length === b.length;
+  } catch (error) {
+    return false;
   }
-  
-  return result === 0;
 }
 
 // Middleware to check if path requires authentication

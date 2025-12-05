@@ -11,7 +11,8 @@ function parseImageData(data) {
   }
   
   // Extract base64 data and mime type
-  const match = data.match(/^data:(image\/[\w+]+);base64,(.*)$/);
+  // Pattern matches image MIME types including svg+xml, vnd.*, etc.
+  const match = data.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,(.*)$/);
   const mimeType = match ? match[1] : 'image/png';
   const b64 = match ? match[2] : data;
   
@@ -40,7 +41,8 @@ function validateImageSize(buffer, maxSizeMB = 50) {
  * @returns {string} Mime type
  */
 function getMimeType(data) {
-  const match = data.match(/^data:(image\/[\w+]+);base64,/);
+  // Pattern matches image MIME types including svg+xml, vnd.*, etc.
+  const match = data.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,/);
   return match ? match[1] : 'image/png';
 }
 

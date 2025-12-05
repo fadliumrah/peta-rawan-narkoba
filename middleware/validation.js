@@ -74,8 +74,8 @@ function validateNews(req, res, next) {
 function validateImageData(data) {
   if (!data) return { valid: false, error: 'No image data provided' };
   
-  // Check if it's a base64 data URL
-  const match = data.match(/^data:(image\/\w+);base64,(.*)$/);
+  // Check if it's a base64 data URL - matches all image MIME types including svg+xml
+  const match = data.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,(.*)$/);
   if (!match) {
     // Try without data URL prefix
     if (!/^[A-Za-z0-9+/]+=*$/.test(data)) {
