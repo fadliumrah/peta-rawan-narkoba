@@ -75,6 +75,11 @@ main { padding:30px 40px; max-width:1400px; margin:0 auto; position:relative; z-
 }
 .admin-card.full-width .card-content { padding:32px 40px; }
 
+/* Consistent button spacing in forms */
+.card-content .btn[type="submit"] {
+  margin-top:20px;
+}
+
 /* Form row: two columns on desktop */
 .form-row { display:flex; gap:12px; width:100%; justify-content:center; }
 .form-row .form-field { width:48%; }

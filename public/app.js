@@ -1,5 +1,47 @@
 // User map: load banner, draw points colored by risk category (rendah/sedang/tinggi)
 (function(){
+  // Common date formatting patterns
+  const DATE_FORMAT_FULL = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  };
+  
+  const DATE_FORMAT_WITH_TIME = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  
+  const DATE_FORMAT_LONG = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  };
+  
+  const TIME_FORMAT = {
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  
+  // Utility function to format date/time in WIB (UTC+7)
+  function formatDateWIB(dateString, options = {}) {
+    // SQLite returns timestamps in format "YYYY-MM-DD HH:MM:SS" which is in UTC
+    // We need to add 'Z' suffix to ensure JavaScript interprets it as UTC
+    let dateStr = dateString;
+    if (dateStr && !dateStr.includes('Z') && !dateStr.includes('+')) {
+      dateStr = dateStr.replace(' ', 'T') + 'Z';
+    }
+    const date = new Date(dateStr);
+    // Convert to WIB (UTC+7) by using timezone option
+    return date.toLocaleString('id-ID', {
+      timeZone: 'Asia/Jakarta',
+      ...options
+    });
+  }
   const map = L.map('map').setView([0.9167, 104.4510], 12);
 
   // Load basemap with CartoDB Voyager
@@ -160,9 +202,9 @@
         const markerColor = kelurahanColorMap[kelurahanName] || '#999999';
         
         const m = L.circleMarker([p.lat, p.lng], {
-          radius: 10,
+          radius: 3,
           color: '#ffffff',
-          weight: 2,
+          weight: 1,
           fillColor: markerColor,
           fillOpacity: 0.9
         }).addTo(markersLayer);
@@ -176,7 +218,7 @@
             </div>
             ${p.description ? `<div style="margin-bottom:6px;"><strong>📝 Keterangan:</strong><br/>${p.description}</div>` : ''}
             <div style="color:#999; font-size:0.85rem; margin-top:8px;">
-              <small>🕐 ${new Date(p.created_at).toLocaleDateString('id-ID', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })}</small>
+              <small>🕐 ${formatDateWIB(p.created_at, DATE_FORMAT_WITH_TIME)} WIB</small>
             </div>
           </div>
         `;
@@ -262,7 +304,7 @@
           <div class="news-card-content">
             <h3 class="news-card-title">${news.title}</h3>
             <div class="news-card-meta">
-              <span>📅 ${new Date(news.created_at).toLocaleDateString('id-ID', {year: 'numeric', month: 'long', day: 'numeric'})}</span>
+              <span>📅 ${formatDateWIB(news.created_at, DATE_FORMAT_FULL)}</span>
               <span>👤 ${news.author}</span>
             </div>
             <p class="news-card-excerpt">${plainText}</p>
@@ -287,17 +329,8 @@
     const modal = document.getElementById('newsModal');
     const modalBody = document.getElementById('newsModalBody');
     
-    const newsDate = new Date(news.created_at);
-    const formattedDate = newsDate.toLocaleDateString('id-ID', {
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric'
-    });
-    const formattedTime = newsDate.toLocaleTimeString('id-ID', {
-      hour: '2-digit', 
-      minute: '2-digit'
-    });
+    const formattedDate = formatDateWIB(news.created_at, DATE_FORMAT_LONG);
+    const formattedTime = formatDateWIB(news.created_at, TIME_FORMAT);
     
     // Build unique share URLs for this news article
     const baseUrl = window.location.origin + window.location.pathname;
