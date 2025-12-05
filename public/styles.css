@@ -276,16 +276,87 @@ main { padding:30px 40px; max-width:1400px; margin:0 auto; position:relative; z-
   background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
 }
 
-/* Points List */
+/* Points List - Modern Design */
 .points-list-wrapper { padding:20px; display:flex; flex-direction:column; align-items:center; }
 .points-list { list-style:none; padding:0; margin:0 auto; width:100%; max-width:720px; }
-.points-list li { padding:16px; background:#f9f9f9; border-radius:8px; margin-bottom:12px; display:flex; flex-direction:row; justify-content:space-between; align-items:center; border-left:4px solid #c41e3a; transition:all 0.3s; text-align:left; }
-.points-list li > div:first-child { flex:1; text-align:left; }
+.points-list li { 
+  padding:20px; 
+  background:linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius:12px; 
+  margin-bottom:16px; 
+  display:flex; 
+  flex-direction:row; 
+  justify-content:space-between; 
+  align-items:center; 
+  border:2px solid #e2e8f0;
+  border-left:5px solid #c41e3a; 
+  transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align:left;
+  box-shadow:0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.points-list li > div:first-child { 
+  flex:1; 
+  text-align:left;
+  padding-right:16px;
+}
 .points-list li:last-child { margin-bottom:0; }
-.points-list li:hover { background:#f0f0f0; transform:translateX(4px); }
-.points-list li > div:first-child { flex:1; }
-.points-list li button { background:#dc3545; color:white; padding:8px 16px; font-size:0.85rem; border-radius:4px; border:none; cursor:pointer; transition:all 0.3s; white-space:nowrap; margin-left:12px; }
-.points-list li button:hover { background:#c82333; box-shadow:0 2px 8px rgba(220,53,69,0.3); }
+.points-list li:hover { 
+  background:linear-gradient(135deg, #fef3f2 0%, #fee2e2 100%);
+  border-color:#fca5a5;
+  transform:translateX(8px) translateY(-2px);
+  box-shadow:0 8px 24px rgba(220, 38, 38, 0.15);
+}
+.points-list li strong {
+  display:block;
+  font-size:1.05rem;
+  color:#1e293b;
+  margin-bottom:6px;
+  font-weight:700;
+}
+.points-list li button { 
+  background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color:white; 
+  padding:10px 20px; 
+  font-size:0.9rem;
+  font-weight:600;
+  border-radius:8px; 
+  border:none; 
+  cursor:pointer; 
+  transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space:nowrap; 
+  margin-left:12px;
+  box-shadow:0 2px 8px rgba(239, 68, 68, 0.3);
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  position:relative;
+  overflow:hidden;
+}
+.points-list li button::before {
+  content:'';
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:0;
+  height:0;
+  border-radius:50%;
+  background:rgba(255, 255, 255, 0.3);
+  transform:translate(-50%, -50%);
+  transition:width 0.6s, height 0.6s;
+}
+.points-list li button:hover::before {
+  width:300px;
+  height:300px;
+}
+.points-list li button:hover { 
+  background:linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow:0 6px 20px rgba(239, 68, 68, 0.45);
+  transform:translateY(-2px) scale(1.05);
+}
+.points-list li button:active {
+  transform:translateY(0) scale(0.98);
+  box-shadow:0 2px 8px rgba(239, 68, 68, 0.3);
+}
 
 /* Empty State */
 .empty-state { text-align:center; padding:40px 20px; color:#999; }
