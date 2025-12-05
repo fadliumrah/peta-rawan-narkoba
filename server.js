@@ -155,6 +155,16 @@ app.post('/api/banner', basicAuth, (req, res) => {
     if (!data) return res.status(400).json({ error: 'data (base64) required' });
     
     db.updateBanner(data, caption);
+    
+    // Backup banner to JSON file for persistence across redeploys
+    try {
+      const bannerBackup = { image_data: data, caption: caption };
+      fs.writeFileSync(path.join(__dirname, 'banner-backup.json'), JSON.stringify(bannerBackup, null, 2));
+      console.log('✅ Banner backed up to banner-backup.json');
+    } catch (backupErr) {
+      console.warn('⚠️ Failed to backup banner:', backupErr.message);
+    }
+    
     res.json({ ok: true, caption });
   } catch (err) {
     console.error('Error uploading banner:', err);

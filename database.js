@@ -158,14 +158,33 @@ function seedSampleData() {
   // Ensure banner has default caption and placeholder image
   const bannerCount = db.prepare('SELECT COUNT(*) as count FROM banner').get();
   if (bannerCount.count === 0) {
-    // Create a simple placeholder banner with gradient
-    const placeholderBanner = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwMCIgaGVpZ2h0PSI0MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMWUzYThhO3N0b3Atb3BhY2l0eToxIiAvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzNiODJmNjtzdG9wLW9wYWNpdHk6MSIgLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTIwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZ3JhZCkiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjQ4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkJOTiBLb3RhIFRhbmp1bmdwaW5hbmc8L3RleHQ+PC9zdmc+';
+    let bannerData = null;
+    let bannerCaption = 'Informasi Area Rawan Narkoba - Kota Tanjungpinang';
+    
+    // Try to load from backup file first (persists across redeploys if committed to git)
+    try {
+      const backupPath = path.join(__dirname, 'banner-backup.json');
+      if (fs.existsSync(backupPath)) {
+        const backup = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
+        bannerData = backup.image_data;
+        bannerCaption = backup.caption || bannerCaption;
+        console.log('✅ Loaded banner from backup file');
+      }
+    } catch (backupErr) {
+      console.warn('⚠️ Could not load banner backup:', backupErr.message);
+    }
+    
+    // Fallback to placeholder banner if no backup exists
+    if (!bannerData) {
+      bannerData = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwMCIgaGVpZ2h0PSI0MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMWUzYThhO3N0b3Atb3BhY2l0eToxIiAvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzNiODJmNjtzdG9wLW9wYWNpdHk6MSIgLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTIwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZ3JhZCkiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjQ4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkJOTiBLb3RhIFRhbmp1bmdwaW5hbmc8L3RleHQ+PC9zdmc+';
+      console.log('✅ Using default placeholder banner');
+    }
     
     db.prepare(`
       INSERT INTO banner (id, image_data, caption)
       VALUES (1, ?, ?)
-    `).run(placeholderBanner, 'Informasi Area Rawan Narkoba - Kota Tanjungpinang');
-    console.log('✅ Added default banner with placeholder image');
+    `).run(bannerData, bannerCaption);
+    console.log('✅ Added banner to database');
   }
 }
 
