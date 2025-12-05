@@ -197,11 +197,55 @@
   // banner form - read file as base64 and send JSON so server doesn't need multipart parser
   const bannerForm = document.getElementById('bannerForm');
   const fileInput = document.getElementById('bannerInput');
+  const bannerPreview = document.getElementById('bannerPreview');
+  const bannerPlaceholder = document.getElementById('bannerPlaceholder');
+  const fileName = document.getElementById('fileName');
+  const bannerCaptionInput = document.getElementById('bannerCaption');
+  
+  // Load existing banner from database
+  async function loadBanner() {
+    try {
+      const res = await fetch('/api/banner');
+      const data = await res.json();
+      if (data && data.url) {
+        bannerPreview.src = data.url;
+        bannerPreview.style.display = 'block';
+        bannerPlaceholder.style.display = 'none';
+      }
+      if (data && data.caption) {
+        bannerCaptionInput.value = data.caption;
+      }
+    } catch (err) {
+      console.error('Failed to load banner:', err);
+    }
+  }
+  
+  // Load banner on page load
+  loadBanner();
+  
+  // File input change handler - show preview and filename
+  fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      // Show filename
+      fileName.style.display = 'block';
+      fileName.querySelector('span').textContent = file.name;
+      
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        bannerPreview.src = event.target.result;
+        bannerPreview.style.display = 'block';
+        bannerPlaceholder.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
   
   bannerForm.addEventListener('submit', async (ev)=>{
     ev.preventDefault();
     const file = fileInput.files[0];
-    const caption = bannerForm.querySelector('[name=caption]').value || '';
+    const caption = bannerCaptionInput.value || '';
     if (!file) {
       alert('Pilih file banner terlebih dahulu');
       return;
@@ -213,7 +257,9 @@
       const res = await fetch('/api/banner', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
       if (res.ok) { 
         alert('✅ Banner berhasil diupdate'); 
-        bannerForm.reset();
+        loadBanner(); // Reload banner
+        fileName.style.display = 'none';
+        fileInput.value = '';
       } else { 
         alert('❌ Upload gagal'); 
       }
