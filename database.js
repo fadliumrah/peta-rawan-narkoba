@@ -343,28 +343,36 @@ module.exports = {
   },
 
   createNews: (title, content, imageBuffer, mimeType, author) => {
+    // Use Indonesian time (UTC+7)
+    const now = new Date();
+    const indonesiaTime = new Date(now.getTime() + (7 * 60 * 60 * 1000)).toISOString().replace('T', ' ').substring(0, 19);
+    
     return db.prepare(`
-      INSERT INTO news (title, content, image_data, mime_type, author)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(title, content, imageBuffer, mimeType, author);
+      INSERT INTO news (title, content, image_data, mime_type, author, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(title, content, imageBuffer, mimeType, author, indonesiaTime, indonesiaTime);
   },
 
   updateNews: (id, title, content, imageBuffer, mimeType, author) => {
+    // Use Indonesian time (UTC+7)
+    const now = new Date();
+    const indonesiaTime = new Date(now.getTime() + (7 * 60 * 60 * 1000)).toISOString().replace('T', ' ').substring(0, 19);
+    
     // If no new image provided, only update text fields
     if (imageBuffer === null || imageBuffer === undefined) {
       return db.prepare(`
         UPDATE news 
         SET title = ?, content = ?, author = ?,
-            updated_at = CURRENT_TIMESTAMP
+            updated_at = ?
         WHERE id = ?
-      `).run(title, content, author, id);
+      `).run(title, content, author, indonesiaTime, id);
     } else {
       return db.prepare(`
         UPDATE news 
         SET title = ?, content = ?, image_data = ?, mime_type = ?, author = ?,
-            updated_at = CURRENT_TIMESTAMP
+            updated_at = ?
         WHERE id = ?
-      `).run(title, content, imageBuffer, mimeType, author, id);
+      `).run(title, content, imageBuffer, mimeType, author, indonesiaTime, id);
     }
   },
 
