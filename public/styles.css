@@ -117,10 +117,10 @@ main { padding:30px 40px; max-width:1400px; margin:0 auto; position:relative; z-
 .logo-drag-drop:hover { background:#f0f0f0; border-color:#c41e3a; }
 .logo-drag-drop.drag-over { background:#ffe6e6; border-color:#c41e3a; }
 
-/* Buttons - Modern Gradient Design */
+/* Buttons - BNN Unified Theme */
 .btn { padding:12px 24px; border:none; border-radius:10px; font-size:0.95rem; cursor:pointer; font-weight:600; transition:all 0.3s; width:100%; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-.btn-primary { background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; }
-.btn-primary:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(102,126,234,0.3); }
+.btn-primary { background:linear-gradient(135deg, #0052b4 0%, #003d82 100%); color:white; border:1px solid #002855; }
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,82,180,0.4); }
 .btn-primary:disabled { background:#9ca3af; cursor:not-allowed; opacity:0.6; transform:none; }
 .btn-danger { background:linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; }
 .btn-danger:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(245,87,108,0.3); }
@@ -140,24 +140,25 @@ main { padding:30px 40px; max-width:1400px; margin:0 auto; position:relative; z-
 .empty-state { text-align:center; padding:40px 20px; color:#999; }
 .empty-state p { margin:0; font-size:0.95rem; }
 
-/* News Section - Modern Design */
+/* News Section - BNN Theme */
 .news-section { padding:40px 20px; max-width:1400px; margin:0 auto; }
-.section-title { text-align:center; font-size:2rem; color:#1f2937; margin-bottom:30px; font-weight:700; }
+.section-title { text-align:center; font-size:2rem; color:#002855; margin-bottom:30px; font-weight:700; position:relative; padding-bottom:12px; }
+.section-title::after { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:120px; height:3px; background:#ffd700; border-radius:2px; }
 
 /* News Search */
 .news-search-container { max-width:600px; margin:0 auto 40px auto; }
 .news-search-input { width:100%; padding:14px 20px; border:2px solid #e5e7eb; border-radius:12px; font-size:1rem; transition:all 0.3s; background:#f9fafb; }
-.news-search-input:focus { outline:none; border-color:#3b82f6; background:white; box-shadow:0 0 0 3px rgba(59,130,246,0.1); }
+.news-search-input:focus { outline:none; border-color:#0052b4; background:white; box-shadow:0 0 0 3px rgba(0,82,180,0.1); }
 
 /* News Grid */
 .news-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(350px, 1fr)); gap:30px; margin-bottom:20px; }
 
-/* News Card */
-.news-card { background:white; border-radius:16px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08); transition:all 0.3s; border:1px solid #e5e7eb; cursor:pointer; }
-.news-card:hover { transform:translateY(-4px); box-shadow:0 8px 24px rgba(0,0,0,0.12); }
+/* News Card - BNN Theme */
+.news-card { background:white; border-radius:16px; overflow:hidden; box-shadow:0 4px 12px rgba(0,40,85,0.08); transition:all 0.3s; border:2px solid #e5e7eb; cursor:pointer; }
+.news-card:hover { transform:translateY(-4px); box-shadow:0 8px 24px rgba(0,82,180,0.2); border-color:#0052b4; }
 .news-card-image { width:100%; height:220px; object-fit:cover; background:#f3f4f6; }
 .news-card-content { padding:20px; }
-.news-card-title { font-size:1.15rem; font-weight:700; color:#1f2937; margin:0 0 12px 0; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.news-card-title { font-size:1.15rem; font-weight:700; color:#002855; margin:0 0 12px 0; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .news-card-meta { display:flex; gap:16px; margin-bottom:12px; font-size:0.85rem; color:#6b7280; flex-wrap:wrap; }
 .news-card-meta span { display:flex; align-items:center; gap:4px; }
 .news-card-excerpt { color:#4b5563; font-size:0.95rem; line-height:1.6; display:-webkit-box; -webkit-line-clamp:3; line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
@@ -184,28 +185,51 @@ main { padding:30px 40px; max-width:1400px; margin:0 auto; position:relative; z-
 @keyframes modalSlideIn { from { opacity:0; transform:translateY(-50px); } to { opacity:1; transform:translateY(0); } }
 .modal-close { position:sticky; top:0; right:0; float:right; font-size:32px; font-weight:700; color:#6b7280; cursor:pointer; padding:12px 20px; z-index:1; background:white; border-radius:0 16px 0 0; transition:color 0.3s; }
 .modal-close:hover { color:#1f2937; }
-.modal-header { padding:30px 40px 20px 40px; border-bottom:2px solid #e5e7eb; }
-.modal-title { font-size:2rem; font-weight:700; color:#1f2937; margin:0 0 16px 0; line-height:1.3; }
+.modal-header { padding:30px 40px 20px 40px; border-bottom:3px solid #ffd700; background:linear-gradient(to bottom, #f9fafb 0%, white 100%); }
+.modal-title { font-size:2rem; font-weight:700; color:#002855; margin:0 0 16px 0; line-height:1.3; }
 .modal-meta { display:flex; gap:20px; font-size:0.95rem; color:#6b7280; flex-wrap:wrap; }
 .modal-meta span { display:flex; align-items:center; gap:6px; }
 .modal-image { width:100%; max-height:500px; object-fit:cover; }
 .modal-body { padding:30px 40px 40px 40px; }
 .modal-body p { margin:0 0 1em 0; line-height:1.8; color:#374151; font-size:1.05rem; min-height:1em; }
 .modal-body p:empty { margin:0 0 1em 0; }
-.modal-body h1, .modal-body h2, .modal-body h3 { color:#1f2937; margin:24px 0 12px 0; font-weight:700; }
+.modal-body h1, .modal-body h2, .modal-body h3, .modal-body h4, .modal-body h5, .modal-body h6 { color:#002855; margin:24px 0 12px 0; font-weight:700; }
 .modal-body h1 { font-size:1.8rem; }
 .modal-body h2 { font-size:1.5rem; }
 .modal-body h3 { font-size:1.2rem; }
+.modal-body h4 { font-size:1.1rem; }
+.modal-body h5 { font-size:1rem; }
+.modal-body h6 { font-size:0.9rem; }
 .modal-body ul, .modal-body ol { margin:0 0 16px 0; padding-left:24px; line-height:1.8; color:#374151; }
-.modal-body strong { font-weight:700; color:#1f2937; }
-.modal-body a { color:#3b82f6; text-decoration:underline; }
-.modal-body blockquote { border-left:4px solid #3b82f6; padding-left:16px; margin:16px 0; font-style:italic; color:#6b7280; }
+.modal-body strong { font-weight:700; color:#002855; }
+.modal-body em { font-style:italic; }
+.modal-body u { text-decoration:underline; }
+.modal-body s { text-decoration:line-through; }
+.modal-body a { color:#0052b4; text-decoration:underline; transition:color 0.3s; }
+.modal-body a:hover { color:#003d82; }
+.modal-body blockquote { border-left:4px solid #0052b4; padding-left:16px; margin:16px 0; font-style:italic; color:#6b7280; background:#f1f5f9; padding:12px 16px; border-radius:4px; }
+.modal-body pre { background:#1f2937; color:#e5e7eb; padding:16px; border-radius:8px; overflow-x:auto; margin:16px 0; }
+.modal-body code { background:#f1f5f9; color:#002855; padding:2px 6px; border-radius:4px; font-family:monospace; font-size:0.9em; }
+.modal-body pre code { background:transparent; padding:0; }
+.modal-body img { max-width:100%; height:auto; border-radius:8px; margin:16px 0; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+.modal-body iframe { max-width:100%; margin:16px 0; border-radius:8px; }
 
-/* Quill Editor Styling */
-.ql-container { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:1rem; }
-.ql-editor { min-height:300px; }
+/* Quill Editor Styling - Professional */
+.ql-container { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:1rem; border-radius:0 0 8px 8px; }
+.ql-toolbar { border-radius:8px 8px 0 0; background:#f9fafb; border-bottom:2px solid #e5e7eb; }
+.ql-editor { min-height:400px; }
 .ql-editor p { margin:0 0 1em 0; min-height:1em; }
 .ql-editor p:empty { margin:0 0 1em 0; }
+.ql-editor h1, .ql-editor h2, .ql-editor h3 { color:#002855; font-weight:700; }
+.ql-editor blockquote { border-left:4px solid #0052b4; padding-left:16px; background:#f1f5f9; padding:12px 16px; border-radius:4px; }
+.ql-editor pre { background:#1f2937; color:#e5e7eb; padding:16px; border-radius:8px; }
+.ql-editor code { background:#f1f5f9; color:#002855; padding:2px 6px; border-radius:4px; font-family:monospace; }
+.ql-editor img { max-width:100%; border-radius:8px; margin:8px 0; }
+.ql-snow .ql-stroke { stroke:#002855; }
+.ql-snow .ql-fill { fill:#002855; }
+.ql-snow .ql-picker-label { color:#002855; }
+.ql-toolbar button:hover, .ql-toolbar button:focus { color:#0052b4; }
+.ql-toolbar button.ql-active { color:#0052b4; }
 
 /* Footer - Official BNN Modern Theme */
 .footer { background:linear-gradient(135deg, #002855 0%, #003d82 50%, #0052b4 100%); color:white; padding:32px 0; margin-top:50px; text-align:center; border-top:3px solid #ffd700; box-shadow:0 -4px 16px rgba(0,40,85,0.3); }

@@ -9,8 +9,8 @@
     subdomains: 'abcd'
   }).addTo(map);
 
-  // load banner
-  fetch('/api/banner').then(r=>r.json()).then(b=>{
+  // load banner with cache-busting for permanence
+  fetch('/api/banner?t=' + Date.now()).then(r=>r.json()).then(b=>{
     const bannerImg = document.getElementById('bannerImg');
     const bannerCaption = document.getElementById('bannerCaption');
     
@@ -19,8 +19,13 @@
     }
     
     if (b && b.url) {
-      bannerImg.src = b.url;
+      // Add cache-busting timestamp to banner image
+      const imgUrl = b.url + (b.url.includes('?') ? '&' : '?') + 't=' + Date.now();
+      bannerImg.src = imgUrl;
       bannerImg.style.display = 'block';
+      bannerImg.style.width = '100%';
+      bannerImg.style.height = 'auto';
+      bannerImg.style.objectFit = 'cover';
     } else {
       bannerImg.style.display = 'none';
     }

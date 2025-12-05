@@ -351,21 +351,26 @@
 
   // ===== NEWS MANAGEMENT =====
   
-  // Initialize Quill rich text editor
+  // Initialize Quill rich text editor with professional features
   const quill = new Quill('#newsEditor', {
     theme: 'snow',
     modules: {
       toolbar: [
-        [{ 'header': [1, 2, 3, false] }],
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        [{ 'font': [] }],
+        [{ 'size': ['small', false, 'large', 'huge'] }],
         ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'script': 'sub'}, { 'script': 'super' }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
         [{ 'align': [] }],
-        ['link', 'blockquote'],
+        ['link', 'image', 'video'],
+        ['blockquote', 'code-block'],
         ['clean']
       ]
     },
-    formats: ['header', 'bold', 'italic', 'underline', 'strike', 'list', 'bullet', 'align', 'link', 'blockquote'],
-    placeholder: 'Tulis isi berita lengkap dengan format... (Tekan Enter 2x untuk spasi antar paragraf)'
+    formats: ['header', 'font', 'size', 'bold', 'italic', 'underline', 'strike', 'color', 'background', 'script', 'list', 'bullet', 'indent', 'align', 'link', 'image', 'video', 'blockquote', 'code-block'],
+    placeholder: 'Tulis isi berita lengkap dengan format profesional... (Tekan Enter 2x untuk spasi antar paragraf)'
   });
 
   // News image preview
