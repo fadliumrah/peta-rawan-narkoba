@@ -19,6 +19,15 @@ const db = new Database(DB_PATH);
 // Enable foreign keys
 db.pragma('foreign_keys = ON');
 
+// Helper function to get current time in Indonesia timezone (WIB/UTC+7)
+function getIndonesiaTime() {
+  const now = new Date();
+  // Convert to Indonesia time (UTC+7)
+  const indonesiaTime = new Date(now.getTime() + (7 * 60 * 60 * 1000));
+  // Format: YYYY-MM-DD HH:MM:SS
+  return indonesiaTime.toISOString().replace('T', ' ').substring(0, 19);
+}
+
 // Initialize database schema
 function initializeDatabase() {
   // Create points table
@@ -260,20 +269,21 @@ module.exports = {
   },
   
   createPoint: (name, lat, lng, category, description) => {
+    const timestamp = getIndonesiaTime();
     const result = db.prepare(`
-      INSERT INTO points (name, lat, lng, category, description)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(name, lat, lng, category, description);
+      INSERT INTO points (name, lat, lng, category, description, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(name, lat, lng, category, description, timestamp, timestamp);
     return result.lastInsertRowid;
   },
   
   updatePoint: (id, name, lat, lng, category, description) => {
+    const timestamp = getIndonesiaTime();
     return db.prepare(`
       UPDATE points 
-      SET name = ?, lat = ?, lng = ?, category = ?, description = ?,
-          updated_at = CURRENT_TIMESTAMP
+      SET name = ?, lat = ?, lng = ?, category = ?, description = ?, updated_at = ?
       WHERE id = ?
-    `).run(name, lat, lng, category, description, id);
+    `).run(name, lat, lng, category, description, timestamp, id);
   },
   
   deletePoint: (id) => {
@@ -286,25 +296,26 @@ module.exports = {
   },
   
   updateBanner: (imageBuffer, mimeType, caption) => {
+    const timestamp = getIndonesiaTime();
     // If no new image provided, only update caption
     if (imageBuffer === null || imageBuffer === undefined) {
       return db.prepare(`
         INSERT INTO banner (id, caption, updated_at)
-        VALUES (1, ?, CURRENT_TIMESTAMP)
+        VALUES (1, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           caption = excluded.caption,
-          updated_at = CURRENT_TIMESTAMP
-      `).run(caption);
+          updated_at = excluded.updated_at
+      `).run(caption, timestamp);
     } else {
       return db.prepare(`
         INSERT INTO banner (id, image_data, mime_type, caption, updated_at)
-        VALUES (1, ?, ?, ?, CURRENT_TIMESTAMP)
+        VALUES (1, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           image_data = excluded.image_data,
           mime_type = excluded.mime_type,
           caption = excluded.caption,
-          updated_at = CURRENT_TIMESTAMP
-      `).run(imageBuffer, mimeType, caption);
+          updated_at = excluded.updated_at
+      `).run(imageBuffer, mimeType, caption, timestamp);
     }
   },
   
@@ -314,14 +325,15 @@ module.exports = {
   },
   
   updateLogo: (imageBuffer, mimeType) => {
+    const timestamp = getIndonesiaTime();
     return db.prepare(`
       INSERT INTO logo (id, image_data, mime_type, updated_at)
-      VALUES (1, ?, ?, CURRENT_TIMESTAMP)
+      VALUES (1, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         image_data = excluded.image_data,
         mime_type = excluded.mime_type,
-        updated_at = CURRENT_TIMESTAMP
-    `).run(imageBuffer, mimeType);
+        updated_at = excluded.updated_at
+    `).run(imageBuffer, mimeType, timestamp);
   },
 
   // News operations
@@ -343,28 +355,28 @@ module.exports = {
   },
 
   createNews: (title, content, imageBuffer, mimeType, author) => {
+    const timestamp = getIndonesiaTime();
     return db.prepare(`
-      INSERT INTO news (title, content, image_data, mime_type, author)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(title, content, imageBuffer, mimeType, author);
+      INSERT INTO news (title, content, image_data, mime_type, author, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(title, content, imageBuffer, mimeType, author, timestamp, timestamp);
   },
 
   updateNews: (id, title, content, imageBuffer, mimeType, author) => {
+    const timestamp = getIndonesiaTime();
     // If no new image provided, only update text fields
     if (imageBuffer === null || imageBuffer === undefined) {
       return db.prepare(`
         UPDATE news 
-        SET title = ?, content = ?, author = ?,
-            updated_at = CURRENT_TIMESTAMP
+        SET title = ?, content = ?, author = ?, updated_at = ?
         WHERE id = ?
-      `).run(title, content, author, id);
+      `).run(title, content, author, timestamp, id);
     } else {
       return db.prepare(`
         UPDATE news 
-        SET title = ?, content = ?, image_data = ?, mime_type = ?, author = ?,
-            updated_at = CURRENT_TIMESTAMP
+        SET title = ?, content = ?, image_data = ?, mime_type = ?, author = ?, updated_at = ?
         WHERE id = ?
-      `).run(title, content, imageBuffer, mimeType, author, id);
+      `).run(title, content, imageBuffer, mimeType, author, timestamp, id);
     }
   },
 
