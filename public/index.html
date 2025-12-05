@@ -25,7 +25,7 @@
 
   <header class="banner-header">
     <div class="banner-container">
-      <img id="bannerImg" class="banner-img" alt="Banner" style="display:none;" />
+      <img id="bannerImg" class="banner-img" src="/banner-bnn.svg" alt="Banner BNN" />
       <div id="bannerCaption" class="caption">Informasi Area Rawan Narkoba - Kota Tanjungpinang</div>
     </div>
   </header>
@@ -66,13 +66,9 @@
   </div>
 
   <script>
-    // Force reload logo and banner with cache-busting timestamp
+    // Force reload logo and banner with cache-busting timestamp (like logo treatment)
     document.getElementById('logoImg').src = '/logo-bnn.png?t=' + Date.now();
-    const bannerImgEl = document.getElementById('bannerImg');
-    if (bannerImgEl && bannerImgEl.src && !bannerImgEl.src.includes('?t=')) {
-      const currentSrc = bannerImgEl.src;
-      bannerImgEl.src = currentSrc + (currentSrc.includes('?') ? '&' : '?') + 't=' + Date.now();
-    }
+    document.getElementById('bannerImg').src = '/banner-bnn.svg?t=' + Date.now();
   </script>
 
   <footer class="footer">

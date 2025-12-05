@@ -9,30 +9,14 @@
     subdomains: 'abcd'
   }).addTo(map);
 
-  // load banner with cache-busting for permanence
+  // Load banner caption only (image loaded directly from file like logo)
   fetch('/api/banner?t=' + Date.now()).then(r=>r.json()).then(b=>{
-    const bannerImg = document.getElementById('bannerImg');
     const bannerCaption = document.getElementById('bannerCaption');
-    
     if (b && b.caption) {
       bannerCaption.textContent = b.caption;
     }
-    
-    if (b && b.url) {
-      // Add cache-busting timestamp to banner image
-      const imgUrl = b.url + (b.url.includes('?') ? '&' : '?') + 't=' + Date.now();
-      bannerImg.src = imgUrl;
-      bannerImg.style.display = 'block';
-      bannerImg.style.width = '100%';
-      bannerImg.style.height = 'auto';
-      bannerImg.style.objectFit = 'cover';
-    } else {
-      bannerImg.style.display = 'none';
-    }
   }).catch(err => {
-    console.error('Failed to load banner:', err);
-    const caption = document.getElementById('bannerCaption');
-    if (caption) caption.textContent = 'Informasi Area Rawan Narkoba - Kota Tanjungpinang';
+    console.log('Banner caption not loaded:', err);
   });
 
   // Kelurahan data with predefined colors (18 kelurahan)
