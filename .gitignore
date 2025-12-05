@@ -1,4 +1,5 @@
 node_modules/
 data/db.sqlite
+data/peta-narkoba.db
 public/uploads/
 .env
