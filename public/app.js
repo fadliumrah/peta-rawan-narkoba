@@ -1,5 +1,20 @@
 // User map: load banner, draw points colored by risk category (rendah/sedang/tinggi)
 (function(){
+  // Utility function to format date/time in WIB (UTC+7)
+  function formatDateWIB(dateString, options = {}) {
+    // SQLite returns timestamps in format "YYYY-MM-DD HH:MM:SS" which is in UTC
+    // We need to add 'Z' suffix to ensure JavaScript interprets it as UTC
+    let dateStr = dateString;
+    if (dateStr && !dateStr.includes('Z') && !dateStr.includes('+')) {
+      dateStr = dateStr.replace(' ', 'T') + 'Z';
+    }
+    const date = new Date(dateStr);
+    // Convert to WIB (UTC+7) by using timezone option
+    return date.toLocaleString('id-ID', {
+      timeZone: 'Asia/Jakarta',
+      ...options
+    });
+  }
   const map = L.map('map').setView([0.9167, 104.4510], 12);
 
   // Load basemap with CartoDB Voyager
@@ -171,7 +186,7 @@
             </div>
             ${p.description ? `<div style="margin-bottom:6px;"><strong>📝 Keterangan:</strong><br/>${p.description}</div>` : ''}
             <div style="color:#999; font-size:0.85rem; margin-top:8px;">
-              <small>🕐 ${new Date(p.created_at).toLocaleDateString('id-ID', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })}</small>
+              <small>🕐 ${formatDateWIB(p.created_at, { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })} WIB</small>
             </div>
           </div>
         `;
@@ -257,7 +272,7 @@
           <div class="news-card-content">
             <h3 class="news-card-title">${news.title}</h3>
             <div class="news-card-meta">
-              <span>📅 ${new Date(news.created_at).toLocaleDateString('id-ID', {year: 'numeric', month: 'long', day: 'numeric'})}</span>
+              <span>📅 ${formatDateWIB(news.created_at, {year: 'numeric', month: 'long', day: 'numeric'})}</span>
               <span>👤 ${news.author}</span>
             </div>
             <p class="news-card-excerpt">${plainText}</p>
@@ -282,14 +297,15 @@
     const modal = document.getElementById('newsModal');
     const modalBody = document.getElementById('newsModalBody');
     
-    const newsDate = new Date(news.created_at);
-    const formattedDate = newsDate.toLocaleDateString('id-ID', {
+    const formattedDate = formatDateWIB(news.created_at, {
+      timeZone: 'Asia/Jakarta',
       weekday: 'long', 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric'
     });
-    const formattedTime = newsDate.toLocaleTimeString('id-ID', {
+    const formattedTime = formatDateWIB(news.created_at, {
+      timeZone: 'Asia/Jakarta',
       hour: '2-digit', 
       minute: '2-digit'
     });

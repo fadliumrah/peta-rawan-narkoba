@@ -1,5 +1,20 @@
 // Admin UI: upload banner, manual add points, list & delete
 (function(){
+  // Utility function to format date/time in WIB (UTC+7)
+  function formatDateWIB(dateString, options = {}) {
+    // SQLite returns timestamps in format "YYYY-MM-DD HH:MM:SS" which is in UTC
+    // We need to add 'Z' suffix to ensure JavaScript interprets it as UTC
+    let dateStr = dateString;
+    if (dateStr && !dateStr.includes('Z') && !dateStr.includes('+')) {
+      dateStr = dateStr.replace(' ', 'T') + 'Z';
+    }
+    const date = new Date(dateStr);
+    // Convert to WIB (UTC+7) by using timezone option
+    return date.toLocaleString('id-ID', {
+      timeZone: 'Asia/Jakarta',
+      ...options
+    });
+  }
   // Initialize mini map for coordinate selection
   const miniMap = L.map('miniMap').setView([0.9167, 104.4510], 12);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -294,14 +309,20 @@
       emptyState.style.display = 'none';
       pts.forEach((p, idx) => {
         const li = document.createElement('li');
-        const date = new Date(p.created_at).toLocaleDateString('id-ID', { hour:'2-digit', minute:'2-digit' });
+        const date = formatDateWIB(p.created_at, { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric',
+          hour:'2-digit', 
+          minute:'2-digit' 
+        });
         
         // Category emoji mapping
         const categoryEmoji = { rendah: '🟢', sedang: '🟡', tinggi: '🔴' };
         const categoryText = { rendah: 'Rendah', sedang: 'Sedang', tinggi: 'Tinggi' };
 
         const infoDiv = document.createElement('div');
-        infoDiv.innerHTML = `<strong>#${idx + 1} - ${p.name || '(tanpa nama)'}</strong><br/><small>${categoryEmoji[p.category] || '⚪'} ${categoryText[p.category] || p.category}</small><br/><small>📍 ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</small><br/><small>📝 ${p.description || '(tanpa deskripsi)'}</small><br/><small style="color:#999;">🕐 ${date}</small>`;
+        infoDiv.innerHTML = `<strong>#${idx + 1} - ${p.name || '(tanpa nama)'}</strong><br/><small>${categoryEmoji[p.category] || '⚪'} ${categoryText[p.category] || p.category}</small><br/><small>📍 ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</small><br/><small>📝 ${p.description || '(tanpa deskripsi)'}</small><br/><small style="color:#999;">🕐 ${date} WIB</small>`;
 
         const delBtn = document.createElement('button'); 
         delBtn.textContent = '🗑️ Hapus'; 
@@ -425,23 +446,33 @@
       }
       
       emptyState.style.display = 'none';
-      newsList.innerHTML = news.map(item => `
-        <div class="news-admin-item" data-id="${item.id}">
-          ${item.image_data ? `<img src="/api/news/${item.id}/image" alt="${item.title}" class="news-admin-thumb" />` : '<div class="news-admin-thumb" style="background:#e5e7eb;"></div>'}
-          <div class="news-admin-info">
-            <h4 class="news-admin-title">${item.title}</h4>
-            <div class="news-admin-meta">
-              📅 ${new Date(item.created_at).toLocaleDateString('id-ID', {year: 'numeric', month: 'long', day: 'numeric'})} | 
-              👤 ${item.author}
-            </div>
-            <p style="color:#6b7280; font-size:0.9rem; margin:0;">${item.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
-            <div class="news-admin-actions">
-              <button class="btn-edit" onclick="editNews(${item.id})">✏️ Edit</button>
-              <button class="btn-delete" onclick="deleteNews(${item.id})">🗑️ Hapus</button>
+      newsList.innerHTML = news.map(item => {
+        const formattedDate = formatDateWIB(item.created_at, {
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        return `
+          <div class="news-admin-item" data-id="${item.id}">
+            ${item.image_data ? `<img src="/api/news/${item.id}/image" alt="${item.title}" class="news-admin-thumb" />` : '<div class="news-admin-thumb" style="background:#e5e7eb;"></div>'}
+            <div class="news-admin-info">
+              <h4 class="news-admin-title">${item.title}</h4>
+              <div class="news-admin-meta">
+                📅 ${formattedDate} WIB | 
+                👤 ${item.author}
+              </div>
+              <p style="color:#6b7280; font-size:0.9rem; margin:0;">${item.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
+              <div class="news-admin-actions">
+                <button class="btn-edit" onclick="editNews(${item.id})">✏️ Edit</button>
+                <button class="btn-delete" onclick="deleteNews(${item.id})">🗑️ Hapus</button>
+              </div>
             </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     } catch (err) {
       console.error('Error loading news:', err);
     }
