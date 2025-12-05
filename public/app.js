@@ -289,7 +289,7 @@
     }
   }
 
-  // Open news detail modal
+  // Open news detail modal (Detik.com style)
   window.openNewsModal = function(newsId) {
     const news = allNews.find(n => n.id === newsId);
     if (!news) return;
@@ -297,22 +297,63 @@
     const modal = document.getElementById('newsModal');
     const modalBody = document.getElementById('newsModalBody');
     
+    const newsDate = new Date(news.created_at);
+    const formattedDate = newsDate.toLocaleDateString('id-ID', {
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric'
+    });
+    const formattedTime = newsDate.toLocaleTimeString('id-ID', {
+      hour: '2-digit', 
+      minute: '2-digit'
+    });
+    
+    // Build share URLs
+    const pageUrl = encodeURIComponent(window.location.href);
+    const newsTitle = encodeURIComponent(news.title);
+    const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${pageUrl}`;
+    const twShareUrl = `https://twitter.com/intent/tweet?text=${newsTitle}&url=${pageUrl}`;
+    const waShareUrl = `https://wa.me/?text=${newsTitle}%20${pageUrl}`;
+    
     modalBody.innerHTML = `
-      ${news.image_data ? `<img src="${news.image_data}" alt="${news.title}" class="modal-image" />` : ''}
       <div class="modal-header">
-        <h2 class="modal-title">${news.title}</h2>
+        <span class="modal-category">BERITA BNN</span>
+        <h1 class="modal-title">${news.title}</h1>
         <div class="modal-meta">
-          <span>📅 ${new Date(news.created_at).toLocaleDateString('id-ID', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'})}</span>
-          <span>👤 Oleh: <strong>${news.author}</strong></span>
+          <span><strong>${formattedDate}</strong>, ${formattedTime} WIB</span>
+          <span>|</span>
+          <span>Oleh: <strong>${news.author}</strong></span>
         </div>
       </div>
+      
+      ${news.image_data ? `
+        <img src="${news.image_data}" alt="${news.title}" class="modal-image" />
+        <div class="modal-image-caption">Foto: BNN Kota Tanjungpinang</div>
+      ` : ''}
+      
       <div class="modal-body">
+        <div class="modal-social">
+          <span class="modal-social-label">Bagikan:</span>
+          <a href="${fbShareUrl}" target="_blank" class="modal-social-btn modal-social-fb">📘 Facebook</a>
+          <a href="${twShareUrl}" target="_blank" class="modal-social-btn modal-social-tw">🐦 Twitter</a>
+          <a href="${waShareUrl}" target="_blank" class="modal-social-btn modal-social-wa">💬 WhatsApp</a>
+        </div>
+        
         ${news.content}
+        
+        <div class="modal-social" style="margin-top:40px;">
+          <span class="modal-social-label">Bagikan Artikel Ini:</span>
+          <a href="${fbShareUrl}" target="_blank" class="modal-social-btn modal-social-fb">📘 Facebook</a>
+          <a href="${twShareUrl}" target="_blank" class="modal-social-btn modal-social-tw">🐦 Twitter</a>
+          <a href="${waShareUrl}" target="_blank" class="modal-social-btn modal-social-wa">💬 WhatsApp</a>
+        </div>
       </div>
     `;
     
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    window.scrollTo(0, 0);
   };
 
   // Close modal
